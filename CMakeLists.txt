@@ -64,12 +64,13 @@ target_link_libraries(yaml_test_node
   yaml-cpp
 )
 
-add_executable(bushland_node src/Bushland.cpp src/bushland_node.cpp)
+add_executable(bushland_node src/bushland.cpp src/bushland_node.cpp)
 
 # add_executable(hestia_node src/Device.cpp)
 
 target_link_libraries(bushland_node
   ${catkin_LIBRARIES}
+  yaml-cpp
 )
 # target_link_libraries(hestia_node
 #   ${catkin_LIBRARIES}

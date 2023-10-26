@@ -40,6 +40,8 @@ class Bush
         // Inidicates whether the bush is on fire
         bool fire;
 
+        
+
 };
 
 #endif

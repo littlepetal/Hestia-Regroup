@@ -32,6 +32,12 @@ class Maps
 
     private:
 
+        ros::NodeHandle nh_;
+        ros::Subscriber odometrySub;
+        ros::Subscriber modeSub; 
+        ros::Publisher tags_pub_;
+        
+
         // Keeps a map of the hazardous bushes
         std::map<int, Bush*> hazardsMap;
 

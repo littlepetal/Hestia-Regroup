@@ -6,14 +6,48 @@
 //--Maps Implementation------------------------------------------
 // Constructs a maps object
 Maps::Maps()
-{
-    // std::cout << "Maps[CTor]: Maps signing on." << std::endl;
+{   
+    ros::NodeHandle n;
+
+    // Publishers
+
+    // Once bot reach a bush tag, ask bush status
+    // change to service client
+    ros::Publisher firesPub = n.advertise<std_msgs::String>("Fires", 1000);
+    // server call back receive a id
+
+
+    //Publish priority list, need to change format
+    ros::Publisher pathPub = n.advertise<std_msgs::String>("Fires", 1000);
+
+
+    // Subscribers
+    ros::Subscriber modeSub = n.subscribe("/operation_mode_topic", 10, &Maps::modeCallback, this);
+
+    // Subscriber object for subscribing to the Odometry topic
+    // Set the size of the message queue to be 1000
+    ros::Subscriber odometrySub = n.subscribe("Odometry", 1000, odometryCallback);
+
+    // Subscriber object for subscribing to the Water topic
+    // Set the size of the message queue to be 1000
+    ros::Subscriber waterSub = n.subscribe("Water", 1000, firesCallback);
+
 }
 
 // Deconstructs the maps object
 Maps::~Maps()
 {
     // std::cout << "Maps[DTor]: Maps signing off." << std::endl;
+}
+
+void Maps::modeCallback(){}
+
+void firesCallback(){}
+
+// Callback function to receive messages from Odometry topic
+void odometryCallback(const std_msgs::String::ConstPtr& msg)
+{
+    ROS_INFO("I heard: [%s]", msg->data.c_str());
 }
 
 // Adds the specified bush to the hazards map with its ID as the key

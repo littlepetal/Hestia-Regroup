@@ -17,7 +17,7 @@ class AprilTagDetector {
 private:
     ros::NodeHandle nh_;
     ros::Subscriber image_sub_;
-    ros::Publisher tags_pub_;
+    ros::Publisher tag_pub_;
     apriltag_family_t *tf_;
     apriltag_detector_t *td_;
 
