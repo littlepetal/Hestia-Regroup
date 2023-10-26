@@ -11,7 +11,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
-#include <ui_package/BushFire.h>
+#include <hestia/BushFire.h>
 
 class UserInterface : public QWidget {
     Q_OBJECT
@@ -21,7 +21,7 @@ public:
 
 private slots:
     void setBushfireLevel(int bush_id);
-    void updateBushStatus(const ui_package::BushFire &msg, int id);
+    void updateBushStatus(const hestia::BushFire &msg, int id);
     void setOperationMode(const QString &mode);
 
 private:

@@ -1,4 +1,4 @@
-#include "ui_package/apriltag_detector.h"
+#include "hestia/apriltag_detector.h"
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "apriltag_detector");

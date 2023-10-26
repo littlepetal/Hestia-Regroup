@@ -1,9 +1,9 @@
-#include "ui_package/user_interface.h"
+#include "hestia/user_interface.h"
 #include <QApplication>
 
 UserInterface::UserInterface(ros::NodeHandle &nh, QWidget *parent) 
     : QWidget(parent), 
-      fire_pub(nh.advertise<ui_package::BushFire>("bush_fire_topic", 10)),
+      fire_pub(nh.advertise<hestia::BushFire>("bush_fire_topic", 10)),
       operation_mode_pub(nh.advertise<std_msgs::String>("operation_mode_topic", 10)) {
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -48,10 +48,10 @@ UserInterface::UserInterface(ros::NodeHandle &nh, QWidget *parent)
 
     // Subscribe to bush status for each bush
     for (int i = 0; i < 4; i++) {
-        bush_status_sub[i] = nh.subscribe<ui_package::BushFire>(
+        bush_status_sub[i] = nh.subscribe<hestia::BushFire>(
             QString("bush%1_status_topic").arg(i+1).toStdString(),
             10,
-            [this, i](const ui_package::BushFire::ConstPtr& msg) {
+            [this, i](const hestia::BushFire::ConstPtr& msg) {
                 updateBushStatus(*msg, i);
             }
         );
@@ -70,7 +70,7 @@ void UserInterface::setBushfireLevel(int bush_id) {
     int fireLevel = 1 + std::rand() % 10; // Random intensity between 1 and 10
     bushUIComponentsList[bush_id].fireLevelLineEdit->setText(QString::number(fireLevel));
 
-    ui_package::BushFire msg;
+    hestia::BushFire msg;
     msg.bush_id = bush_id;
     msg.is_on_fire = true;
     msg.fire_intensity = fireLevel;
@@ -80,7 +80,7 @@ void UserInterface::setBushfireLevel(int bush_id) {
     ROS_INFO("Fire message published for bush_id: %d", bush_id);
 }
 
-void UserInterface::updateBushStatus(const ui_package::BushFire &msg, int id) {
+void UserInterface::updateBushStatus(const hestia::BushFire &msg, int id) {
     QString status = QString("Bush %1: Fire Level %2").arg(msg.bush_id).arg(msg.fire_intensity);
     bushUIComponentsList[id].statusLineEdit->setText(status);
 }
@@ -92,17 +92,3 @@ void UserInterface::setOperationMode(const QString &mode) {
     operation_mode_pub.publish(msg);
 }
 
-int main(int argc, char **argv) {
-    ros::init(argc, argv, "ui_node");
-    QApplication app(argc, argv);
-    ros::NodeHandle nh;
-
-    UserInterface ui(nh);
-    ui.show();
-
-    // Use ROS spin in a separate thread to keep both ROS and Qt running
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
-
-    return app.exec();
-}

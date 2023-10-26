@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(ui_package)
+project(hestia)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -45,9 +45,8 @@ include_directories(
 )
 
 ## Declare a C++ executable
-qt5_wrap_cpp(MOC_FILES include/ui_package/user_interface.h)
-add_executable(ui_node src/user_interface.cpp ${MOC_FILES})
-
+qt5_wrap_cpp(MOC_FILES include/hestia/user_interface.h)
+add_executable(ui_node src/user_interface.cpp src/user_interface_node.cpp ${MOC_FILES})
 
 add_executable(yaml_test_node src/yaml_test.cpp)
 
@@ -65,6 +64,18 @@ target_link_libraries(yaml_test_node
   yaml-cpp
 )
 
+add_executable(bushland_node src/Bushland.cpp src/bushland_node.cpp)
+
+# add_executable(hestia_node src/Device.cpp)
+
+target_link_libraries(bushland_node
+  ${catkin_LIBRARIES}
+)
+# target_link_libraries(hestia_node
+#   ${catkin_LIBRARIES}
+# )
+
+
 catkin_package(
   CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
 )
@@ -72,6 +83,7 @@ catkin_package(
 # Declare the apriltag_detector_node executable
 add_executable(apriltag_detector_node src/apriltag_detector.cpp src/apriltag_detector_node.cpp)
 add_dependencies(apriltag_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 target_link_libraries(apriltag_detector_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
