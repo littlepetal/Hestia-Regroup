@@ -1,0 +1,16 @@
+bush1:
+  position:
+    - 1
+    - 2
+  onFire: false
+  fireIntensity: 0
+bush2:
+  position:
+    - 2
+    - 3
+  onFire: true
+  fireIntensity: 5
+reservoir1:
+  position:
+    - 4
+    - 5
