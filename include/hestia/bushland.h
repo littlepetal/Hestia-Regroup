@@ -8,6 +8,8 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
+#include <nav_msgs/Odometry.h>
+#include <cstdlib>
 
 
 class Reservoir {
@@ -33,7 +35,7 @@ public:
     void setPosition(const std::pair<float, float>& pos) { position = pos; }
     void setFireStatus(bool fire, int intensity) {
         onFire = fire;
-        fireIntensity = intensity;
+        fireIntensity = fireIntensity+intensity;
     }
 };
 
@@ -50,7 +52,7 @@ public:
     Bushland();
     void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);
     void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);
-    void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
+    void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
     void modeCallback(const std_msgs::String::ConstPtr& msg);
     void saveAndUpdate();
 
@@ -66,9 +68,12 @@ private:
     
     std::vector<Bush> bushes_;
     // Monitor monitor_;
-    nav_msgs::Odometry current_odom_;
     std::string mode_;
     std::vector<Reservoir> reservoirs;
     // std::string filename = "map_data.yaml";
     std::string filename = "src/hestia/data/map_data.yaml";
+    double tb3_pose_;
+    int detected_id;
+    std::pair<float, float> current_odom_;
+
 };

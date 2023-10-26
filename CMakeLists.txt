@@ -36,6 +36,10 @@ generate_messages(
   std_msgs
 )
 
+catkin_package(
+  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+)
+
 ## Specify additional locations of header files
 include_directories(
   include
@@ -46,12 +50,18 @@ include_directories(
 
 ## Declare a C++ executable
 qt5_wrap_cpp(MOC_FILES include/hestia/user_interface.h)
+
 add_executable(ui_node src/user_interface.cpp src/user_interface_node.cpp ${MOC_FILES})
 
-add_executable(yaml_test_node src/yaml_test.cpp)
+add_executable(bushland_node src/bushland.cpp src/bushland_node.cpp)
 
-## Add cmake target dependencies of the executable
+add_executable(hestia_node src/Hestia.cpp src/hestia_node.cpp)
+
+add_executable(apriltag_detector_node src/apriltag_detector.cpp src/apriltag_detector_node.cpp)
+
 add_dependencies(ui_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(apriltag_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(ui_node
@@ -59,31 +69,14 @@ target_link_libraries(ui_node
   Qt5::Core
   Qt5::Widgets
 )
-target_link_libraries(yaml_test_node
-  ${catkin_LIBRARIES}
-  yaml-cpp
-)
-
-add_executable(bushland_node src/bushland.cpp src/bushland_node.cpp)
-
-# add_executable(hestia_node src/Device.cpp)
 
 target_link_libraries(bushland_node
   ${catkin_LIBRARIES}
   yaml-cpp
 )
-# target_link_libraries(hestia_node
-#   ${catkin_LIBRARIES}
-# )
-
-
-catkin_package(
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+target_link_libraries(hestia_node
+  ${catkin_LIBRARIES}
 )
-
-# Declare the apriltag_detector_node executable
-add_executable(apriltag_detector_node src/apriltag_detector.cpp src/apriltag_detector_node.cpp)
-add_dependencies(apriltag_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(apriltag_detector_node
   ${catkin_LIBRARIES}
