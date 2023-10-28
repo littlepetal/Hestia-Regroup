@@ -5,6 +5,11 @@ Bushland::Bushland() {
     fire_info_sub_ = nh_.subscribe("/bush_fire_topic", 100, &Bushland::fireInfoCallback, this);
     odom_sub_ = nh_.subscribe("odom", 100, &Bushland::odomMsgCallback, this);
     mode_sub_ = nh_.subscribe("/operation_mode_topic", 100, &Bushland::modeCallback, this);
+    water_sub_ = nh_.subscribe("/water_dispensed",100, &Bushland::waterCallback,this);
+}
+
+void Bushland::odomMsgCallback(const std_msgs::Int32::ConstPtr &msg){
+    water_received = msg->data;
 }
 
 // Callback function to update turtlebot's orientation using odometry data.
