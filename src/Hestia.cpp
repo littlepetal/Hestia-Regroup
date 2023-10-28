@@ -68,17 +68,17 @@ void Hestia::GasTankCallback(const std_msgs::Int32::ConstPtr& msg)
 }
 
 // Callback function to receive the mode of operation from operation mode topic
-void Hesta::ModeCallBack()
+void Hesta::ModeCallBack(const std_msgs::String::ConstPtr& msg)
 {
-    ROS_INFO("I heard: [%d]", msg->data);
+    ROS_INFO("I heard: [%s]", msg->data.c_str());
 
     // Set the operation mode of hestia depenidng on the signal
-    if (msg->data == 0)
+    if (msg->data.c_str() == "Start Control Burning")
     {
         // Set hestia to controlled burning mode
         mode = CONTROLLED_BURNING;
     }
-    else if (msg->data == 1)
+    else if (msg->data.c_str() == "Start Fire Eliminating")
     {
         // Set hestia to fire elimination mode
         mode = FIRE_ELIMINATION;

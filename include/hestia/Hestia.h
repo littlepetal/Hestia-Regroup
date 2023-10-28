@@ -145,7 +145,7 @@ class Hestia
         void GasTankCallback(const std_msgs::Int32::ConstPtr& msg);
 
         // Callback for the operation mode subscriber
-        void ModeCallback(const std_msgs::Int32::ConstPtr& msg);
+        void ModeCallback(const std_msgs::String::ConstPtr& msg);
 
         // Callback for the april tag subscriber
         void TagCallback(const std_msgs::Int32::ConstPtr& msg);
