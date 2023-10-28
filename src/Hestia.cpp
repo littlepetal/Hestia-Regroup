@@ -13,6 +13,12 @@ Hestia::Hestia()
     // Initialise the amount of resources required
     requiredResource = 0;
 
+    // Initialise the last detected ID
+    currentId = -1;
+
+    // Initialise the operation mode
+    mode = UNDEFINED;
+
     // Initialise the hydro blaster and flame thrower
     hydroBlaster = new HydroBlaster();
     flameThrower = new FlameThrower();
@@ -23,6 +29,11 @@ Hestia::Hestia()
     // Initialise gas tank subscriber
     gasTankSub = nh.subscribe("/reservoir_gas_status", 100, &Hestia::GasTankCallback, this);
 
+    // Initialise operation mode subscriber
+    modeSub = nh.subscribe("/operation_mode_topic", 100, &Hestia::ModeCallback, this);
+
+    // Initialise april tag detection subscriber
+    tagSub = nh.subscribe("/tag_detection", 100, &Hestia::TagCallback, this);
 }
 
 // Destructs Hestia
@@ -36,6 +47,7 @@ void Hestia::WaterTankCallback(const std_msgs::Int32::ConstPtr& msg)
 {
     ROS_INFO("I heard: [%d]", msg->data);
 
+    // Load hestia with water
     if (msg->data > requiredResource)
     {
         hydroBlaster->Load(requiredResource);
@@ -47,10 +59,38 @@ void Hestia::GasTankCallback(const std_msgs::Int32::ConstPtr& msg)
 {
     ROS_INFO("I heard: [%d]", msg->data);
 
+    // Load hestia with gas
     if (msg->data > requiredResource)
     {
         flameThrower->Load(requiredResource);
     }
+}
+
+// Callback function to receive the mode of operation from operation mode topic
+void Hesta::ModeCallBack()
+{
+    ROS_INFO("I heard: [%d]", msg->data);
+
+    // Set the operation mode of hestia depenidng on the signal
+    if (msg->data == 0)
+    {
+        // Set hestia to controlled burning mode
+        mode = CONTROLLED_BURNING;
+    }
+    else if (msg->data == 1)
+    {
+        // Set hestia to fire elimination mode
+        mode = FIRE_ELIMINATION;
+    }
+}
+
+// Callback function to receive the ID of the currently detected april tag
+void Hestia::TagCallback()
+{
+    ROS_INFO("I heard: [%d]", msg->data);
+
+    // Set the current ID
+    currentId = msg->data;
 }
 
 //--Device Implementation------------------------------------------
