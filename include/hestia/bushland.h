@@ -50,6 +50,7 @@ public:
     }
 
     Bushland();
+    void waterCallback(const std_msgs::Int32::ConstPtr& msg);
     void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);
     void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);
     void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
@@ -62,6 +63,7 @@ private:
     ros::Subscriber fire_info_sub_;
     ros::Subscriber odom_sub_;
     ros::Subscriber mode_sub_;
+    ros::Subscriber water_sub_;
 
     ros::Publisher fires_pub_;
     ros::Publisher water_pub_;
@@ -75,5 +77,6 @@ private:
     double tb3_pose_;
     int detected_id;
     std::pair<float, float> current_odom_;
+    int water_received;
 
 };
