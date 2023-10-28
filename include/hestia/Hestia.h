@@ -104,6 +104,19 @@ class Hestia
         // Keeps track of the amount of resources needed
         int requiredResource;
 
+        // The ID of the last detected april tag
+        int currentId;
+
+        enum OperationMode
+        {
+            UNDEFINED = -1
+            CONTROLLED_BURNING,
+            FIRE_ELIMINATION
+        };
+
+        // Current Operation mode
+        OperationMode mode;
+
         // The devices on Hestia
         HydroBlaster* hydroBlaster;
         FlameThrower* flameThrower;       
@@ -119,11 +132,22 @@ class Hestia
         // in the bushland node
         ros::Subscriber gasTankSub;
 
+        // Subscribe to operation mode from the user interface
+        ros::Subscriber modeSub;
+
+        // Subscribe to the currently detected april tag ID from april tag detector
+        ros::Subscriber tagSub;
         
         // Callback for the water tank subscriber
         void WaterTankCallback(const std_msgs::Int32::ConstPtr& msg);
 
         // Callback for the gas tank subscriber
         void GasTankCallback(const std_msgs::Int32::ConstPtr& msg);
+
+        // Callback for the operation mode subscriber
+        void ModeCallback(const std_msgs::Int32::ConstPtr& msg);
+
+        // Callback for the april tag subscriber
+        void TagCallback(const std_msgs::Int32::ConstPtr& msg);
 };
 
