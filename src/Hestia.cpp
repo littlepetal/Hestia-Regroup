@@ -117,7 +117,13 @@ void HydroBlaster::Deploy(int bushID, int level)
 
         // Put out the fire
         // bushland->LocateFire(bushID)->EliminateFire();  
-        waterBlasterPub.publish(level);
+
+        // Format the message
+        std_msgs::Int32 message;
+        message.data = level
+
+        // Publish the message
+        waterBlasterPub.publish(message);
 
         // Decrement number of available water
         availableResource -= level;
@@ -163,9 +169,15 @@ void FlameThrower::Deploy(int bushID, int level)
         // Format string
         // std::String message = std::format("Hestia deployed %d flames at the hazard with ID %d", level, bushID);
 
-        // Put out the fire
+        // Burn the hazard
         // bushland->LocateFire(bushID)->EliminateFire();  
-        flameThrowerPub.publish(level);
+
+        // Format the message
+        std_msgs::Int32 message;
+        message.data = level
+
+        // Publish the message
+        flameThrowerPub.publish(message);
 
         // Decrement number of available water
         availableResource -= level;
