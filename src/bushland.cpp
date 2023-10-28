@@ -52,7 +52,12 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg) {
 
         // Sort the bushes based on fire intensity
         std::sort(bushes_.begin(), bushes_.end(), [](const Bush& a, const Bush& b) { return a.fireIntensity > b.fireIntensity; });
-        reMap();
+        for (const Bush& bush : bushes_) {
+            if (bush.onFire) {
+                ROS_INFO("On fire bush ID: %d", bush.id);
+            }
+        }
+        // reMap();
         }
     }
     // Check if the detected ID is between 2 and 5
@@ -95,7 +100,7 @@ void Bushland::fireInfoCallback(const hestia::BushFire::ConstPtr& msg) {
 
 void Bushland::modeCallback(const std_msgs::String::ConstPtr& msg) {
     mode_ = msg->data;
-
+    ROS_INFO("%s mode",mode_.c_str());
 }
 
 void Bushland::saveAndUpdate() {

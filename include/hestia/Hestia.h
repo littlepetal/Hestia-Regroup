@@ -5,6 +5,10 @@
 #include <sensor_msgs/CompressedImage.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <actionlib/client/simple_action_client.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <nav_msgs/Odometry.h>
 
 //--Device Interface---------------------------------------------------
 class Device
@@ -107,20 +111,24 @@ class Hestia
         // The ID of the last detected april tag
         int currentId;
 
-        enum OperationMode
-        {
-            UNDEFINED = -1
-            CONTROLLED_BURNING,
-            FIRE_ELIMINATION
-        };
+        // enum OperationMode
+        // {
+        //     UNDEFINED = -1
+        //     CONTROLLED_BURNING = 0,
+        //     FIRE_ELIMINATION = 1
+        // };
 
         // Current Operation mode
-        OperationMode mode;
+        // OperationMode mode;
+        int mode;
 
         // April tag pose
         std::map<int, geometry_msgs::Pose> tag_poses_;
         geometry_msgs::Pose original_pose_;
         bool original_pose_received_;
+
+        std::pair<float, float> current_odom_;
+        int detected_id;
 
         // The devices on Hestia
         HydroBlaster* hydroBlaster;
@@ -143,6 +151,9 @@ class Hestia
         // Subscribe to the currently detected april tag ID from april tag detector
         ros::Subscriber tagSub;
 
+        ros::Subscriber priority_sub_;
+        ros::Subscriber odom_sub_;
+
         // A client???
         actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* move_base_client_;
         
@@ -156,12 +167,14 @@ class Hestia
         void ModeCallback(const std_msgs::String::ConstPtr& msg);
 
         // Callback for the april tag subscriber
-        void TagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& msg);
+        void TagCallback(const std_msgs::Int32::ConstPtr& msg);
 
         // Drive Hestia to destination
         void moveToGoal(const geometry_msgs::Pose& goal_pose);
 
         // Decide where Hestia needs to go next
-        void priorityCallback(const std_msgs::String::ConstPtr& msg) 
+        void priorityCallback(const std_msgs::String::ConstPtr& msg);
+
+        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
 };
 

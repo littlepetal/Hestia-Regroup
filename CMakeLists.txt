@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   message_runtime
   cv_bridge
+  actionlib             # Add this
+  move_base_msgs        # Add this
 )
 
 ## System dependencies are found with CMake's conventions
@@ -37,7 +39,7 @@ generate_messages(
 )
 
 catkin_package(
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime actionlib move_base_msgs
 )
 
 ## Specify additional locations of header files

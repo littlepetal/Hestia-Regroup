@@ -18,7 +18,7 @@ Hestia::Hestia(): original_pose_received_(false)
     currentId = -1;
 
     // Initialise the operation mode
-    mode = UNDEFINED;
+    mode = -1;
 
     // Initialise the hydro blaster and flame thrower
     hydroBlaster = new HydroBlaster();
@@ -40,7 +40,9 @@ Hestia::Hestia(): original_pose_received_(false)
     tagSub = nh.subscribe("/tag_detection", 100, &Hestia::TagCallback, this);
 
     // Decide where Hestia needs to go next
-    priority_sub_ = nh_.subscribe("priority_list", 1, &TurtleBot3DriveNode::priorityCallback, this);
+    priority_sub_ = nh.subscribe("priority_list", 1, &Hestia::priorityCallback, this);
+
+    odom_sub_ = nh.subscribe("odom", 100, &Hestia::odomMsgCallback, this);
 }
 
 // Destructs Hestia
@@ -48,6 +50,17 @@ Hestia::~Hestia()
 {
     delete move_base_client_;
 }
+
+// Callback function to receive messages from reservoir water topic
+void Hestia::odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg)
+{
+    current_odom_ = std::make_pair(msg->pose.pose.position.x, msg->pose.pose.position.y);
+    // // Compute yaw (heading) from quaternion.
+    // double siny = 2.0 * (msg->pose.pose.orientation.w * msg->pose.pose.orientation.z + msg->pose.pose.orientation.x * msg->pose.pose.orientation.y);
+    // double cosy = 1.0 - 2.0 * (msg->pose.pose.orientation.y * msg->pose.pose.orientation.y + msg->pose.pose.orientation.z * msg->pose.pose.orientation.z);  
+    // tb3_pose_ = atan2(siny, cosy);
+}
+
 
 // Callback function to receive messages from reservoir water topic
 void Hestia::WaterTankCallback(const std_msgs::Int32::ConstPtr& msg)
@@ -74,7 +87,7 @@ void Hestia::GasTankCallback(const std_msgs::Int32::ConstPtr& msg)
 }
 
 // Callback function to receive the mode of operation from operation mode topic
-void Hesta::ModeCallBack(const std_msgs::String::ConstPtr& msg)
+void Hestia::ModeCallback(const std_msgs::String::ConstPtr& msg)
 {
     ROS_INFO("I heard: [%s]", msg->data.c_str());
 
@@ -82,86 +95,88 @@ void Hesta::ModeCallBack(const std_msgs::String::ConstPtr& msg)
     if (msg->data.c_str() == "Start Control Burning")
     {
         // Set hestia to controlled burning mode
-        mode = CONTROLLED_BURNING;
+        mode = 0;
     }
     else if (msg->data.c_str() == "Start Fire Eliminating")
     {
         // Set hestia to fire elimination mode
-        mode = FIRE_ELIMINATION;
+        mode = 1;
     }
 }
 
 // Callback function to receive the ID of the currently detected april tag
-void Hestia::TagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& msg)
+void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
 {
-    // ROS_INFO("I heard: [%d]", msg->data);
+    detected_id = msg->data;
+    // // ROS_INFO("I heard: [%d]", msg->data);
 
-    // // Set the current ID
-    // currentId = msg->data;
+    // // // Set the current ID
+    // // currentId = msg->data;
 
-    for (const auto& detection : msg->detections) 
-    {
-        int id = detection.id[0];
-        const geometry_msgs::PoseStamped& tag_pose = detection.pose;
-        tag_poses_[id] = tag_pose.pose;
-    }
+    // for (const auto& detection : msg->data) 
+    // for ()
+    // {
+    //     int id = detection.id[0];
+    //     const geometry_msgs::PoseStamped& tag_pose = detection.pose;
+    //     tag_poses_[id] = tag_pose.pose;
+    // }
 
-    // If the original pose yet, save the current pose as the original pose.
-    if (!original_pose_received_) 
-    {
-        original_pose_ = msg->detections[0].pose.pose;
-        original_pose_received_ = true;
-    }
+    // // If the original pose yet, save the current pose as the original pose.
+    // if (!original_pose_received_) 
+    // {
+    //     original_pose_ = msg->detections[0].pose.pose;
+    //     original_pose_received_ = true;
+    // }
 
-    // If detected all 5 AprilTags, start the sequence.
-    if (tag_poses_.size() == 5) 
-    {
-        // executeSequence();
-    }
+    // // If detected all 5 AprilTags, start the sequence.
+    // if (tag_poses_.size() == 5) 
+    // {
+    //     // executeSequence();
+    // }
 }
 
 // Decide where Hestia needs to go next
 void priorityCallback(const std_msgs::String::ConstPtr& msg) 
 {
-    // Parse the priority list with number id
-    std::vector<std::string> priority_list;
-    boost::split(priority_list, msg->data, boost::is_any_of(","));
+    // // Parse the priority list with number id
+    // std::vector<std::string> priority_list;
+    // boost::split(priority_list, msg->data, boost::is_any_of(","));
 
-    // Go to water base
-    int water_base_id = 0;  // assuming water base has ID 0
-    moveToGoal(tag_poses_[water_base_id]);
+    // // Go to water base
+    // int water_base_id = 0;  // assuming water base has ID 0
+    // moveToGoal(tag_poses_[water_base_id]);
 
-    // Go to fire locations based on priority list
-    for (const auto& fire : priority_list) 
-    {
-        int fire_id = std::stoi(fire);
-        moveToGoal(tag_poses_[fire_id]);
+    // // Go to fire locations based on priority list
+    // for (const auto& fire : priority_list) 
+    // {
+    //     int fire_id = std::stoi(fire);
+    //     moveToGoal(tag_poses_[fire_id]);
 
-        // Go back to water base to refill
-        moveToGoal(tag_poses_[water_base_id]);
-    }
+    //     // Go back to water base to refill
+    //     moveToGoal(tag_poses_[water_base_id]);
+    // }
 }
 
 // Drive Hestia to destination
 void moveToGoal(const geometry_msgs::Pose& goal_pose) 
 {
-    move_base_msgs::MoveBaseGoal goal;
+    // move_base_msgs::MoveBaseGoal goal;
 
-    goal.target_pose.header.frame_id = "map";
-    goal.target_pose.header.stamp = ros::Time::now();
-    goal.target_pose.pose = goal_pose;
+    // goal.target_pose.header.frame_id = "map";
+    // goal.target_pose.header.stamp = ros::Time::now();
+    // goal.target_pose.pose = goal_pose;
 
-    move_base_client_->sendGoal(goal);
-    move_base_client_->waitForResult();
+    // move_base_client_->sendGoal(goal);
+    // move_base_client_->waitForResult();
 
-    if (move_base_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) 
-    {
-        ROS_INFO("Goal reached!");
-    } 
-    else 
-    {
-        ROS_INFO("Failed to reach goal");
-    }
+    // if (move_base_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) 
+    // {
+    //     ROS_INFO("Goal reached!");
+    // } 
+    // else 
+    // {
+    //     ROS_INFO("Failed to reach goal");
+    // }
 }
 
 //--Device Implementation------------------------------------------
