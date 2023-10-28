@@ -10,6 +10,7 @@
 // Constructs Hestia
 Hestia::Hestia()
 {
+    
     // Initialise the amount of resources required
     requiredResource = 0;
 
@@ -120,7 +121,7 @@ void HydroBlaster::Deploy(int bushID, int level)
 
         // Format the message
         std_msgs::Int32 message;
-        message.data = level
+        message.data = level;
 
         // Publish the message
         waterBlasterPub.publish(message);
@@ -174,7 +175,7 @@ void FlameThrower::Deploy(int bushID, int level)
 
         // Format the message
         std_msgs::Int32 message;
-        message.data = level
+        message.data = level;
 
         // Publish the message
         flameThrowerPub.publish(message);

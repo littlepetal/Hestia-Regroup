@@ -50,12 +50,14 @@ public:
     }
 
     Bushland();
-    void waterCallback(const std_msgs::Int32::ConstPtr& msg);
+    void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);
+    void starterCallback(const std_msgs::Int32::ConstPtr& msg);
     void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);
     void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);
     void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
     void modeCallback(const std_msgs::String::ConstPtr& msg);
     void saveAndUpdate();
+    void reMap();
 
 private:
     ros::NodeHandle nh_;
@@ -64,9 +66,11 @@ private:
     ros::Subscriber odom_sub_;
     ros::Subscriber mode_sub_;
     ros::Subscriber water_sub_;
+    // ros::Subscriber starter_sub_;
 
     ros::Publisher fires_pub_;
     ros::Publisher water_pub_;
+    
     
     std::vector<Bush> bushes_;
     // Monitor monitor_;
