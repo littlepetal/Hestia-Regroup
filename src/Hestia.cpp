@@ -4,6 +4,8 @@
 //--Includes-----------------------------------------------------------
 #include "hestia/Hestia.h"
 
+// #include <format>
+
 //--Hestia Implementation------------------------------------------
 // Constructs Hestia
 Hestia::Hestia()
@@ -85,7 +87,7 @@ HydroBlaster::HydroBlaster()
 {
     // std::cout << "HydroBlaster[CTor]: HydroBlster signing on." << std::endl;
     // Initialise water blaster publisher
-    waterBlasterPub = nh.advertise<std_msgs::String>("/water_blasted_to_id", 100);
+    waterBlasterPub = nh.advertise<std_msgs::Int32>("/water_blasted_to_id", 100);
 }
 
 // Deconstructs a hydro blaster 
@@ -110,6 +112,9 @@ void HydroBlaster::Deploy(int bushID, int level)
     // Check that there is enough water in the bushfire manager bot
     if (availableResource > level)
     {
+        // Format string
+        // std::String message = std::format("Hestia deployed %d water at the fire with ID %d", level, bushID);
+
         // Put out the fire
         // bushland->LocateFire(bushID)->EliminateFire();  
         waterBlasterPub.publish(level);
@@ -130,7 +135,7 @@ FlameThrower::FlameThrower()
     // std::cout << "FlameThrower[CTor]: FlameThrower signing on." << std::endl;
 
     // Initialise flame thrower publisher
-    flameThrowerPub = nh.advertise<std_msgs::String>("/flame_thrown_to_id", 100);
+    flameThrowerPub = nh.advertise<std_msgs::Int32>("/flame_thrown_to_id", 100);
 }
 
 // Deconstructs the flame thrower
@@ -155,6 +160,9 @@ void FlameThrower::Deploy(int bushID, int level)
     // Check that there is enough gas in the bushfire manager bot
     if (availableResource > level)
     {
+        // Format string
+        // std::String message = std::format("Hestia deployed %d flames at the hazard with ID %d", level, bushID);
+
         // Put out the fire
         // bushland->LocateFire(bushID)->EliminateFire();  
         flameThrowerPub.publish(level);
