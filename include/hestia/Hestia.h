@@ -117,6 +117,11 @@ class Hestia
         // Current Operation mode
         OperationMode mode;
 
+        // April tag pose
+        std::map<int, geometry_msgs::Pose> tag_poses_;
+        geometry_msgs::Pose original_pose_;
+        bool original_pose_received_;
+
         // The devices on Hestia
         HydroBlaster* hydroBlaster;
         FlameThrower* flameThrower;       
@@ -137,6 +142,9 @@ class Hestia
 
         // Subscribe to the currently detected april tag ID from april tag detector
         ros::Subscriber tagSub;
+
+        // A client???
+        actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* move_base_client_;
         
         // Callback for the water tank subscriber
         void WaterTankCallback(const std_msgs::Int32::ConstPtr& msg);
@@ -148,6 +156,12 @@ class Hestia
         void ModeCallback(const std_msgs::String::ConstPtr& msg);
 
         // Callback for the april tag subscriber
-        void TagCallback(const std_msgs::Int32::ConstPtr& msg);
+        void TagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& msg);
+
+        // Drive Hestia to destination
+        void moveToGoal(const geometry_msgs::Pose& goal_pose);
+
+        // Decide where Hestia needs to go next
+        void priorityCallback(const std_msgs::String::ConstPtr& msg) 
 };
 

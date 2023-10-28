@@ -8,7 +8,7 @@
 
 //--Hestia Implementation------------------------------------------
 // Constructs Hestia
-Hestia::Hestia()
+Hestia::Hestia(): original_pose_received_(false) 
 {
     
     // Initialise the amount of resources required
@@ -24,6 +24,9 @@ Hestia::Hestia()
     hydroBlaster = new HydroBlaster();
     flameThrower = new FlameThrower();
 
+    // Initialise a client???
+    move_base_client_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true);
+
     // Initialise water tank subscriber
     waterTankSub = nh.subscribe("/reservoir_water_status", 100, &Hestia::WaterTankCallback, this);
 
@@ -35,12 +38,15 @@ Hestia::Hestia()
 
     // Initialise april tag detection subscriber
     tagSub = nh.subscribe("/tag_detection", 100, &Hestia::TagCallback, this);
+
+    // Decide where Hestia needs to go next
+    priority_sub_ = nh_.subscribe("priority_list", 1, &TurtleBot3DriveNode::priorityCallback, this);
 }
 
 // Destructs Hestia
 Hestia::~Hestia()
 {
-
+    delete move_base_client_;
 }
 
 // Callback function to receive messages from reservoir water topic
@@ -86,12 +92,76 @@ void Hesta::ModeCallBack(const std_msgs::String::ConstPtr& msg)
 }
 
 // Callback function to receive the ID of the currently detected april tag
-void Hestia::TagCallback()
+void Hestia::TagCallback(const apriltag_ros::AprilTagDetectionArray::ConstPtr& msg)
 {
-    ROS_INFO("I heard: [%d]", msg->data);
+    // ROS_INFO("I heard: [%d]", msg->data);
 
-    // Set the current ID
-    currentId = msg->data;
+    // // Set the current ID
+    // currentId = msg->data;
+
+    for (const auto& detection : msg->detections) 
+    {
+        int id = detection.id[0];
+        const geometry_msgs::PoseStamped& tag_pose = detection.pose;
+        tag_poses_[id] = tag_pose.pose;
+    }
+
+    // If the original pose yet, save the current pose as the original pose.
+    if (!original_pose_received_) 
+    {
+        original_pose_ = msg->detections[0].pose.pose;
+        original_pose_received_ = true;
+    }
+
+    // If detected all 5 AprilTags, start the sequence.
+    if (tag_poses_.size() == 5) 
+    {
+        // executeSequence();
+    }
+}
+
+// Decide where Hestia needs to go next
+void priorityCallback(const std_msgs::String::ConstPtr& msg) 
+{
+    // Parse the priority list with number id
+    std::vector<std::string> priority_list;
+    boost::split(priority_list, msg->data, boost::is_any_of(","));
+
+    // Go to water base
+    int water_base_id = 0;  // assuming water base has ID 0
+    moveToGoal(tag_poses_[water_base_id]);
+
+    // Go to fire locations based on priority list
+    for (const auto& fire : priority_list) 
+    {
+        int fire_id = std::stoi(fire);
+        moveToGoal(tag_poses_[fire_id]);
+
+        // Go back to water base to refill
+        moveToGoal(tag_poses_[water_base_id]);
+    }
+}
+
+// Drive Hestia to destination
+void moveToGoal(const geometry_msgs::Pose& goal_pose) 
+{
+    move_base_msgs::MoveBaseGoal goal;
+
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+    goal.target_pose.pose = goal_pose;
+
+    move_base_client_->sendGoal(goal);
+    move_base_client_->waitForResult();
+
+    if (move_base_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) 
+    {
+        ROS_INFO("Goal reached!");
+    } 
+    else 
+    {
+        ROS_INFO("Failed to reach goal");
+    }
 }
 
 //--Device Implementation------------------------------------------
