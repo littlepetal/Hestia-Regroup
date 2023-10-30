@@ -67,7 +67,7 @@ UserInterface::~UserInterface() {
 void UserInterface::setBushfireLevel(int bush_id) {
     ROS_INFO("setBushfireLevel called for bush_id: %d", bush_id);
 
-    int fireLevel = 1 + std::rand() % 10; // Random intensity between 1 and 10
+    int fireLevel = 1 + std::rand() % 3; // Random intensity between 1 and 10
     bushUIComponentsList[bush_id].fireLevelLineEdit->setText(QString::number(fireLevel));
 
     hestia::BushFire msg;

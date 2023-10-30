@@ -35,6 +35,10 @@
   <build_depend>cv_bridge</build_depend>
  <build_export_depend>cv_bridge</build_export_depend>
   <exec_depend>cv_bridge</exec_depend>
+  <depend>actionlib</depend>  
+  <depend>move_base_msgs</depend>  
+  <depend>tf</depend>  
+  <depend>geometry_msgs</depend>  
 
 
 

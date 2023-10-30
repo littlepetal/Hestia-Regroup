@@ -3,6 +3,7 @@
 #include "hestia/BushFire.h"
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Int32MultiArray.h>
 // #include "Bush.h"
 // #include "Monitor.h"
 #include <vector>
@@ -27,9 +28,10 @@ public:
     std::pair<float, float> position;
     bool onFire;
     int fireIntensity;
+    bool harzard;
 
-    Bush(int id, std::pair<float, float> pos, bool fire, int intensity) 
-        : id(id), position(pos), onFire(fire), fireIntensity(intensity) {}
+    Bush(int id, std::pair<float, float> pos, bool fire, int intensity,bool harzard) 
+        : id(id), position(pos), onFire(fire), fireIntensity(intensity), harzard(harzard) {}
 
     int getTagID() const { return id; }
     void setPosition(const std::pair<float, float>& pos) { position = pos; }
@@ -51,7 +53,7 @@ public:
 
     Bushland();
     void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);
-    void starterCallback(const std_msgs::Int32::ConstPtr& msg);
+    void goalCallback(const std_msgs::Int32::ConstPtr& msg);
     void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);
     void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);
     void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
@@ -66,7 +68,7 @@ private:
     ros::Subscriber odom_sub_;
     ros::Subscriber mode_sub_;
     ros::Subscriber water_sub_;
-    // ros::Subscriber starter_sub_;
+    ros::Subscriber goal_sub_;
 
     ros::Publisher fires_pub_;
     ros::Publisher water_pub_;

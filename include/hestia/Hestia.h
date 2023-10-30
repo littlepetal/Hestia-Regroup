@@ -9,6 +9,12 @@
 #include <actionlib/client/simple_action_client.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Twist.h>
+#include <cstdlib>
+#include <yaml-cpp/yaml.h>
+#include <vector>
+#include <string>
+#include <utility>  // for std::pair
 
 //--Device Interface---------------------------------------------------
 class Device
@@ -97,6 +103,7 @@ class Hestia
 {
     public:
 
+
         // Construct a Hestia
         Hestia();
 
@@ -104,6 +111,7 @@ class Hestia
         ~Hestia();
 
     private:
+        void processDetectedID() ;
 
         // Keeps track of the amount of resources needed
         int requiredResource;
@@ -141,6 +149,7 @@ class Hestia
         // in the bushland node
         ros::Subscriber waterTankSub;
 
+        
         // Subscribe to gas loaded from reservoir 
         // in the bushland node
         ros::Subscriber gasTankSub;
@@ -154,9 +163,13 @@ class Hestia
         ros::Subscriber priority_sub_;
         ros::Subscriber odom_sub_;
 
+        ros::Publisher detected_goal_pub_;
+        ros::Publisher cmd_pub;
         // A client???
         actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* move_base_client_;
         
+        void turn(float degrees);
+
         // Callback for the water tank subscriber
         void WaterTankCallback(const std_msgs::Int32::ConstPtr& msg);
 
@@ -173,8 +186,42 @@ class Hestia
         void moveToGoal(const geometry_msgs::Pose& goal_pose);
 
         // Decide where Hestia needs to go next
-        void priorityCallback(const std_msgs::String::ConstPtr& msg);
+        // void priorityCallback(const std_msgs::String::ConstPtr& msg);
 
         void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
+
+        std::vector<std::pair<float, float>>  getPositions(const std::string& filename) {
+            YAML::Node config = YAML::LoadFile(filename);
+            
+            std::vector<std::pair<float, float>> positions;
+
+            // 遍历文件中的所有灌木丛和reservoir
+            for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
+                std::string key = it->first.as<std::string>();
+
+                std::pair<float, float> position;
+                if (mode==1){
+
+                    // 如果该项是灌木丛，并且它是着火的，或者是reservoir，那么添加它的位置
+                    if ((key.find("bush") != std::string::npos && it->second["onFire"].as<bool>()) 
+                        || key.find("reservoir") != std::string::npos) {
+                        position.first = it->second["position"][0].as<float>();
+                        position.second = it->second["position"][1].as<float>();
+                        positions.push_back(position);
+                    }
+                }
+                else if (mode ==0){
+                    // 如果该项是灌木丛，并且它是危险的，或者是reservoir，那么添加它的位置
+                    if ((key.find("bush") != std::string::npos && it->second["harzard"].as<bool>()) 
+                        || key.find("reservoir") != std::string::npos) {
+                        position.first = it->second["position"][0].as<float>();
+                        position.second = it->second["position"][1].as<float>();
+                        positions.push_back(position);
+                    }
+
+                }
+            }
+            return positions;
+        }
 };
 

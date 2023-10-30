@@ -6,6 +6,8 @@ add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
+  tf
   roscpp
   rospy
   std_msgs
@@ -39,7 +41,7 @@ generate_messages(
 )
 
 catkin_package(
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime actionlib move_base_msgs
+  CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs message_runtime actionlib move_base_msgs
 )
 
 ## Specify additional locations of header files
@@ -79,6 +81,7 @@ target_link_libraries(bushland_node
 
 target_link_libraries(hestia_node
   ${catkin_LIBRARIES}
+  yaml-cpp
 )
 
 target_link_libraries(apriltag_detector_node
@@ -86,3 +89,6 @@ target_link_libraries(apriltag_detector_node
   ${OpenCV_LIBRARIES}
   apriltag
 )
+
+add_executable(marker src/marker.cpp)
+target_link_libraries(marker ${catkin_LIBRARIES} yaml-cpp)

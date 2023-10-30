@@ -7,20 +7,43 @@ Bushland::Bushland() {
     odom_sub_ = nh_.subscribe("odom", 100, &Bushland::odomMsgCallback, this);
     mode_sub_ = nh_.subscribe("/operation_mode_topic", 100, &Bushland::modeCallback, this);
     water_sub_ = nh_.subscribe("/water_dispensed",100, &Bushland::waterMsgCallback,this);
-    // starter_sub_ = nh_.subscribe("/start_a_loop",100, &Bushland::starterCallback,this);
+    goal_sub_ = nh_.subscribe("/detected_goal_id",100, &Bushland::goalCallback,this);
 
     water_pub_ = nh_.advertise<std_msgs::Int32>("/water_needed", 1);
-    // fires_pub_ = nh_.advertise<std_msgs::Int32>("/tag_detection", 1);
+    fires_pub_ = nh_.advertise<std_msgs::Int32>("/target", 1);
+    water_received = 0;
 }
 
 void Bushland::waterMsgCallback(const std_msgs::Int32::ConstPtr &msg){
     water_received = msg->data;
 }
 
-// void Bushland::starterCallback(const std_msgs::Int32::ConstPtr &msg){
-//     // Each time at starating point[]
+void Bushland::goalCallback(const std_msgs::Int32::ConstPtr &msg){
+    int goal_id = msg->data;
+    if (goal_id >= 1 && goal_id <= 4) {
+        ROS_INFO("Reached bush: %d and putout fire",goal_id);
+        // Check if the bush with this ID already exists
+        auto it = std::find_if(bushes_.begin(), bushes_.end(), [goal_id](const Bush& bush) { return bush.getTagID() == goal_id; });
 
-// }
+        // if (it == bushes_.end()) { // If the bush does not exist
+        //     Bush new_bush(detected_id, current_odom_, false, 0);
+        //     bushes_.push_back(new_bush);
+        // } else { 
+        //     // If the bush exists and is on fire, reduce its fire intensity
+        if (it->onFire) {
+            // int new_intensity = it->fireIntensity - water_received;
+            int new_intensity = 0;
+            if (new_intensity <= 0) {
+                new_intensity = 0;
+                it->onFire = false;
+            }
+            it->setFireStatus(it->onFire, new_intensity);
+        // }
+        // }
+        }
+    }
+    saveAndUpdate();
+}
 
 // Callback function to update turtlebot's orientation using odometry data.
 void Bushland::odomMsgCallback(const nav_msgs::Odometry::ConstPtr &msg)
@@ -36,42 +59,71 @@ void Bushland::odomMsgCallback(const nav_msgs::Odometry::ConstPtr &msg)
 void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg) {
     int detected_id = msg->data;
     if (detected_id == 0) {
-        if (mode_ == "Start Fire Eliminating"){
-        // Calculate the total water needed
-        std_msgs::Int32 water;
-            
-        int total_water_needed = 0;
-        for (const Bush& bush : bushes_) {
-            if (bush.onFire) {
-                total_water_needed += bush.fireIntensity;  // Here, we assume the fireIntensity directly indicates the amount of water needed
-            }
-        }
-        ROS_INFO("Water needed %d",total_water_needed);
-        water.data = total_water_needed;
-        water_pub_.publish(water);
+        ROS_INFO("Detect start point");
 
-        // Sort the bushes based on fire intensity
-        std::sort(bushes_.begin(), bushes_.end(), [](const Bush& a, const Bush& b) { return a.fireIntensity > b.fireIntensity; });
-        for (const Bush& bush : bushes_) {
-            if (bush.onFire) {
-                ROS_INFO("On fire bush ID: %d", bush.id);
-            }
+        if (reservoirs.empty()) {
+            Reservoir newReservoir(detected_id, current_odom_); 
+            reservoirs.push_back(newReservoir);
         }
-        // reMap();
+
+        if (mode_ == "Start Fire Eliminating"){
+            // Calculate the total water needed
+            std_msgs::Int32 water;
+                
+            int total_water_needed = 0;
+            for (const Bush& bush : bushes_) {
+                if (bush.onFire) {
+                    total_water_needed += bush.fireIntensity;  // Here, we assume the fireIntensity directly indicates the amount of water needed
+                }
+            }
+            ROS_INFO("Water needed %d",total_water_needed);
+            water.data = total_water_needed;
+            water_pub_.publish(water);
+
+            // Sort the bushes based on fire intensity
+            std::sort(bushes_.begin(), bushes_.end(), [](const Bush& a, const Bush& b) { return a.fireIntensity > b.fireIntensity; });
+            // reMap();
+
+            ROS_INFO("Number of bushes after reMap: %zu", bushes_.size());
+            if (!bushes_.empty() && bushes_.front().onFire) {
+                ROS_INFO("Bush with highest fire intensity ID: %d", bushes_.front().id);
+                
+                std_msgs::Int32 msg;
+                // msg.data.push_back(bushes_.front().id);
+                // fire_bush_ids_pub_.publish(msg);
+            }
+            
+            // for (const Bush& bush : bushes_) {
+            //     if (bush.onFire) {
+            //         ROS_INFO("On fire bush ID: %d", bush.id);
+            //     }
+            // }
+            
+            // std_msgs::Int32MultiArray msg;
+            // for (const Bush& bush : bushes_) {
+            //     if (bush.onFire) {
+            //         msg.data.push_back(bush.id);
+            //     }
+            // }
+            // fire_bush_ids_pub_.publish(msg);
         }
     }
     // Check if the detected ID is between 2 and 5
-    else if (detected_id >= 2 && detected_id <= 5) {
+    else if (detected_id >= 1 && detected_id <= 4) {
+        ROS_INFO("Detect bush: %d",detected_id);
         // Check if the bush with this ID already exists
         auto it = std::find_if(bushes_.begin(), bushes_.end(), [detected_id](const Bush& bush) { return bush.getTagID() == detected_id; });
 
         if (it == bushes_.end()) { // If the bush does not exist
-            Bush new_bush(detected_id, current_odom_, false, 0);
+            bool status = false;
+            if (detected_id==4){status = true;}
+            Bush new_bush(detected_id, current_odom_, false, 0,status);
             bushes_.push_back(new_bush);
         } else { 
             // If the bush exists and is on fire, reduce its fire intensity
             if (it->onFire) {
-                int new_intensity = it->fireIntensity - water_received;
+                // int new_intensity = it->fireIntensity - water_received;
+                int new_intensity = 0;
                 if (new_intensity <= 0) {
                     new_intensity = 0;
                     it->onFire = false;
@@ -80,9 +132,9 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg) {
             }
         }
     }
-    else if (detected_id == 6) {
-        Reservoir(detected_id, current_odom_); 
-    }
+    // else if (detected_id == 6) {
+    //     Reservoir(detected_id, current_odom_); 
+    // }
     saveAndUpdate();
 }
 
@@ -121,12 +173,14 @@ void Bushland::saveAndUpdate() {
                 config[bushKey]["position"] = bush_position;
                 config[bushKey]["onFire"] = bush.onFire;
                 config[bushKey]["fireIntensity"] = bush.fireIntensity;
+                config[bushKey]["harzard"] = bush.harzard;  // store the harzard at
             }
         } else {
             // Add new bush
             config[bushKey]["position"] = bush_position;
             config[bushKey]["onFire"] = bush.onFire;
             config[bushKey]["fireIntensity"] = bush.fireIntensity;
+            config[bushKey]["harzard"] = bush.harzard;  // store the harzard at
         }
     }
 
@@ -145,6 +199,8 @@ void Bushland::saveAndUpdate() {
 }
 
 void Bushland::reMap() {
+    ROS_INFO("Entering reMap function.");
+    ROS_INFO("Number of bushes at start of reMap: %zu", bushes_.size());
     YAML::Node config;
     if (std::ifstream(filename)) {
         config = YAML::LoadFile(filename);

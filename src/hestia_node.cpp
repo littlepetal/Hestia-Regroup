@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "hestia_node");
 
     Hestia hestia;
-
+    
     // Pump Callbacks
     ros::spin();
     
