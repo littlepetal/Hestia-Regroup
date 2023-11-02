@@ -20,20 +20,31 @@ class AprilTagDetector
 {
     public:
 
+        // Constructs an Apriltag detector object
         AprilTagDetector();
-        ~AprilTagDetector();
 
+        // Destructs the Apriltag detector object
+        ~AprilTagDetector();
+        
+        // Callback function for the image subscriber
         void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg);
 
     private:
-    
-        ros::NodeHandle nh;
-        ros::Subscriber imageSub;
-        ros::Publisher tagPub;
-        apriltag_family_t* tf;
-        apriltag_detector_t* td;
 
-        // double computeTagSize(const apriltag_detection_t *det);
+        // Node handle
+        ros::NodeHandle nh;
+
+        // Camera image subscriber
+        ros::Subscriber imageSub;
+
+        // Apriltag publisher
+        ros::Publisher tagPub;
+
+        // ROS 
+        apriltag_family_t* tf;
+
+        // ROS 
+        apriltag_detector_t* td;
 };
 
 #endif

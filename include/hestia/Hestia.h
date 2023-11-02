@@ -16,6 +16,8 @@
 #include <vector>
 #include <string>
 #include <utility>  // for std::pair
+#include <thread>
+#include <mutex>
 
 //--Device Interface---------------------------------------------------
 class Device
@@ -107,6 +109,8 @@ class Hestia
 
     private:
 
+        std::mutex IdMutex;
+
         void processDetectedID();
 
         // Keeps track of the amount of resources needed
@@ -129,9 +133,14 @@ class Hestia
 
         // April tag pose
         std::map<int, geometry_msgs::Pose> tagPose;
+
+        // Previous pose
         geometry_msgs::Pose originalPose;
+
+        //
         bool originalPoseReceived;
 
+        //
         std::pair<float, float> currentOdometry;
         int detectedId;
 
@@ -157,10 +166,15 @@ class Hestia
         // Subscribe to the currently detected april tag ID from april tag detector
         ros::Subscriber tagSub;
 
-        ros::Subscriber prioritySub;
-        ros::Subscriber odometrySub;
+        ros::Subscriber prioritySub;    // May not be in use
 
+        // Hestia odometry subscriber
+        ros::Subscriber odometrySub; 
+
+        // Goal detection publisher
         ros::Publisher detectedGoalPub;
+
+        // Command prompt velocity publisher
         ros::Publisher commandPub;
         // A client???
         actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* moveBaseClient;
@@ -187,45 +201,7 @@ class Hestia
 
         void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
 
-
-        std::vector<std::pair<float, float>>  getPositions(const std::string& filename) 
-        {
-            YAML::Node config = YAML::LoadFile(filename);
-            
-            std::vector<std::pair<float, float>> positions;
-
-            // 遍历文件中的所有灌木丛和reservoir
-            for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) 
-            {
-                std::string key = it->first.as<std::string>();
-
-                std::pair<float, float> position;
-                if (mode == 1)
-                {
-                    // 如果该项是灌木丛，并且它是着火的，或者是reservoir，那么添加它的位置
-                    if ((key.find("bush") != std::string::npos && it->second["onFire"].as<bool>()) 
-                            || key.find("reservoir") != std::string::npos) 
-                    {
-                        position.first = it->second["position"][0].as<float>();
-                        position.second = it->second["position"][1].as<float>();
-                        positions.push_back(position);
-                    }
-                }
-                else if (mode == 0)
-                {
-                    // 如果该项是灌木丛，并且它是危险的，或者是reservoir，那么添加它的位置
-                    if ((key.find("bush") != std::string::npos && it->second["harzard"].as<bool>()) 
-                            || key.find("reservoir") != std::string::npos) 
-                    {
-                        position.first = it->second["position"][0].as<float>();
-                        position.second = it->second["position"][1].as<float>();
-                        positions.push_back(position);
-                    }
-                }
-            }
-
-            return positions;
-        }
+        std::vector<std::pair<float, float>> getPositions(const std::string& filename);
 };
 
 #endif

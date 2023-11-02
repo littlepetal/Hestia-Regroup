@@ -3,16 +3,24 @@
 #include <QApplication>
 
 //--UserInterface Implementation------------------------------------------
+// Constructor for the UserInterface class. It is initialised with 
+// a reference to a ROS NodeHandle and a Qt QWidget parent
+// It initialises two ROS publishers, fire_pub and operation_mode_pub, 
+// for topics related to bush fires and operation modes
 UserInterface::UserInterface(ros::NodeHandle &nh, QWidget* parent) 
     : QWidget(parent), 
       firePub(nh.advertise<hestia::BushFire>("bush_fire_topic", 10)),
       operationModePub(nh.advertise<std_msgs::String>("operation_mode_topic", 10)) 
 {
 
+    // A Qt vertical layout (mainLayout) is created
     QVBoxLayout* mainLayout = new QVBoxLayout;
+
+    // A random seed is initialised based on the current time
     std::srand(std::time(nullptr));
 
-    // Bush UI components
+    // Creates UI components for each of the four bush objects, 
+    // including labels, buttons, and line edits
     for (int i = 0; i < 4; i++) 
     {
         QHBoxLayout* bushLayout = new QHBoxLayout;
@@ -22,11 +30,13 @@ UserInterface::UserInterface(ros::NodeHandle &nh, QWidget* parent)
         QLineEdit* fireLevelLineEdit = new QLineEdit(this);
         QLineEdit* statusLineEdit = new QLineEdit(this);
 
+        // The UI components are added to the bushLayout layout
         bushLayout->addWidget(bushLabel);
         bushLayout->addWidget(setFireButton);
         bushLayout->addWidget(fireLevelLineEdit);
         bushLayout->addWidget(statusLineEdit);
 
+        // The bushLayout layout is added to the mainLayout layout
         mainLayout->addLayout(bushLayout);
 
         // Connect the button to a lambda function that calls setBushfireLevel

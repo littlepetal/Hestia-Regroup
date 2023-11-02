@@ -22,6 +22,8 @@ class UserInterface : public QWidget
 
     public:
 
+        // Constructor for the UserInterface class. It takes a
+        // reference to a ROS NodeHandle and a Qt QWidget parent as arguments
         UserInterface(ros::NodeHandle& nh, QWidget* parent = nullptr);
         ~UserInterface();
 

@@ -3,11 +3,9 @@
 
 //--Includes-----------------------------------------------------------
 #include "hestia/Hestia.h"
-#include <thread>
-#include <mutex>
 
-int detectedId = -1;
-std::mutex id_mutex;
+
+
 // #include <format>
 
 //--Hestia Implementation------------------------------------------
@@ -19,6 +17,8 @@ Hestia::Hestia(): originalPoseReceived(false)
 
     // Initialise the last detected ID
     currentId = -1;
+
+    detectedId = -1;
 
     // Initialise the operation mode
     mode = -1;
@@ -177,7 +177,7 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
 // void Hestia::processDetectedID() {
 //     int local_id;
 //     {
-//         std::lock_guard<std::mutex> lock(id_mutex);
+//         std::lock_guard<std::mutex> lock(IdMutex);
 //         local_id = detectedId;
 //         detectedId = -1;  // Reset or whatever logic you need
 //     }
@@ -271,6 +271,45 @@ void Hestia::turn(float degrees)
     // Stop the robot
     twist.angular.z = 0;
     commandPub.publish(twist);
+}
+
+std::vector<std::pair<float, float>> Hestia::getPositions(const std::string& filename) 
+{
+    YAML::Node config = YAML::LoadFile(filename);
+    
+    std::vector<std::pair<float, float>> positions;
+
+    // 遍历文件中的所有灌木丛和reservoir
+    for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) 
+    {
+        std::string key = it->first.as<std::string>();
+
+        std::pair<float, float> position;
+        if (mode == 1)
+        {
+            // 如果该项是灌木丛，并且它是着火的，或者是reservoir，那么添加它的位置
+            if ((key.find("bush") != std::string::npos && it->second["onFire"].as<bool>()) 
+                    || key.find("reservoir") != std::string::npos) 
+            {
+                position.first = it->second["position"][0].as<float>();
+                position.second = it->second["position"][1].as<float>();
+                positions.push_back(position);
+            }
+        }
+        else if (mode == 0)
+        {
+            // 如果该项是灌木丛，并且它是危险的，或者是reservoir，那么添加它的位置
+            if ((key.find("bush") != std::string::npos && it->second["harzard"].as<bool>()) 
+                    || key.find("reservoir") != std::string::npos) 
+            {
+                position.first = it->second["position"][0].as<float>();
+                position.second = it->second["position"][1].as<float>();
+                positions.push_back(position);
+            }
+        }
+    }
+
+    return positions;
 }
 
 
