@@ -1,9 +1,13 @@
+//--Includes-----------------------------------------------------------
 #include "hestia/user_interface.h"
 #include <QApplication>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
     ros::init(argc, argv, "ui_node");
+
     QApplication app(argc, argv);
+    
     ros::NodeHandle nh;
 
     UserInterface ui(nh);

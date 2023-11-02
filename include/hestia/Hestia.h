@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HESTIA_H
+#define HESTIA_H
 
 //--Includes-----------------------------------------------------------
 #include <ros/ros.h>
@@ -56,16 +57,14 @@ class HydroBlaster: public Device
         ~HydroBlaster();
 
         // Increases the number of available water by level amount
-        // void Load(Reservoir* reservoir, int level);
         void Load(int level);
 
         // Blasts water at the bush indicated by bushID
-        // void Deploy(Monitor* bushland, int bushID);
         void Deploy(int bushID, int level);
 
     private:
 
-        // Publish water blasted at fire of interest to monitor 
+        // Publishes water blasted at fire of interest to monitor 
         // in the bushland node
         ros::Publisher waterBlasterPub;
         
@@ -83,26 +82,22 @@ class FlameThrower: public Device
         ~FlameThrower();
 
         // Increases the number of available gas by level amount
-        // void Load(Reservoir* reservoir, int level);
         void Load(int level);
 
         // Throws flames at the bush indicated by bushID
-        // void Deploy(Monitor* bushland, int bushID);
         void Deploy(int bushID, int level);
         
     private:
     
-        // Publish flame thrown at hazard of interest to monitor 
+        // Publishes flame thrown at hazard of interest to monitor 
         // in the bushland node
         ros::Publisher flameThrowerPub;
-
-        
 };
+
 //--Hestia Interface---------------------------------------------------
 class Hestia
 {
     public:
-
 
         // Construct a Hestia
         Hestia();
@@ -111,7 +106,8 @@ class Hestia
         ~Hestia();
 
     private:
-        void processDetectedID() ;
+
+        void processDetectedID();
 
         // Keeps track of the amount of resources needed
         int requiredResource;
@@ -126,17 +122,18 @@ class Hestia
         //     FIRE_ELIMINATION = 1
         // };
 
-        // Current Operation mode
         // OperationMode mode;
+
+        // Current Operation mode
         int mode;
 
         // April tag pose
-        std::map<int, geometry_msgs::Pose> tag_poses_;
-        geometry_msgs::Pose original_pose_;
-        bool original_pose_received_;
+        std::map<int, geometry_msgs::Pose> tagPose;
+        geometry_msgs::Pose originalPose;
+        bool originalPoseReceived;
 
-        std::pair<float, float> current_odom_;
-        int detected_id;
+        std::pair<float, float> currentOdometry;
+        int detectedId;
 
         // The devices on Hestia
         HydroBlaster* hydroBlaster;
@@ -160,13 +157,13 @@ class Hestia
         // Subscribe to the currently detected april tag ID from april tag detector
         ros::Subscriber tagSub;
 
-        ros::Subscriber priority_sub_;
-        ros::Subscriber odom_sub_;
+        ros::Subscriber prioritySub;
+        ros::Subscriber odometrySub;
 
-        ros::Publisher detected_goal_pub_;
-        ros::Publisher cmd_pub;
+        ros::Publisher detectedGoalPub;
+        ros::Publisher commandPub;
         // A client???
-        actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* move_base_client_;
+        actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* moveBaseClient;
         
         void turn(float degrees);
 
@@ -183,45 +180,52 @@ class Hestia
         void TagCallback(const std_msgs::Int32::ConstPtr& msg);
 
         // Drive Hestia to destination
-        void moveToGoal(const geometry_msgs::Pose& goal_pose);
+        void moveToGoal(const geometry_msgs::Pose& goalPose);
 
         // Decide where Hestia needs to go next
         // void priorityCallback(const std_msgs::String::ConstPtr& msg);
 
         void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
 
-        std::vector<std::pair<float, float>>  getPositions(const std::string& filename) {
+
+        std::vector<std::pair<float, float>>  getPositions(const std::string& filename) 
+        {
             YAML::Node config = YAML::LoadFile(filename);
             
             std::vector<std::pair<float, float>> positions;
 
             // 遍历文件中的所有灌木丛和reservoir
-            for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
+            for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) 
+            {
                 std::string key = it->first.as<std::string>();
 
                 std::pair<float, float> position;
-                if (mode==1){
-
+                if (mode == 1)
+                {
                     // 如果该项是灌木丛，并且它是着火的，或者是reservoir，那么添加它的位置
                     if ((key.find("bush") != std::string::npos && it->second["onFire"].as<bool>()) 
-                        || key.find("reservoir") != std::string::npos) {
+                            || key.find("reservoir") != std::string::npos) 
+                    {
                         position.first = it->second["position"][0].as<float>();
                         position.second = it->second["position"][1].as<float>();
                         positions.push_back(position);
                     }
                 }
-                else if (mode ==0){
+                else if (mode == 0)
+                {
                     // 如果该项是灌木丛，并且它是危险的，或者是reservoir，那么添加它的位置
                     if ((key.find("bush") != std::string::npos && it->second["harzard"].as<bool>()) 
-                        || key.find("reservoir") != std::string::npos) {
+                            || key.find("reservoir") != std::string::npos) 
+                    {
                         position.first = it->second["position"][0].as<float>();
                         position.second = it->second["position"][1].as<float>();
                         positions.push_back(position);
                     }
-
                 }
             }
+
             return positions;
         }
 };
 
+#endif

@@ -1,8 +1,10 @@
-#pragma once
+#ifndef APRILTAG_DETECTOR_H
+#define APRILTAG_DETECTOR_H
 
+//--Includes-----------------------------------------------------------
 #include <ros/ros.h>
 #include <sensor_msgs/CompressedImage.h>
-#include <std_msgs/Int32.h>
+#include <stdmsgs/Int32.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <apriltag/apriltag.h>
@@ -13,19 +15,25 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-class AprilTagDetector {
-private:
-    ros::NodeHandle nh_;
-    ros::Subscriber image_sub_;
-    ros::Publisher tag_pub_;
-    apriltag_family_t *tf_;
-    apriltag_detector_t *td_;
+//--AprilTagDetector Interface---------------------------------------------------
+class AprilTagDetector 
+{
+    public:
 
-    // double computeTagSize(const apriltag_detection_t *det);
+        AprilTagDetector();
+        ~AprilTagDetector();
 
-public:
-    AprilTagDetector();
-    ~AprilTagDetector();
+        void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg);
 
-    void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg);
+    private:
+    
+        ros::NodeHandle nh;
+        ros::Subscriber imageSub;
+        ros::Publisher tagPub;
+        apriltag_family_t* tf;
+        apriltag_detector_t* td;
+
+        // double computeTagSize(const apriltag_detection_t *det);
 };
+
+#endif

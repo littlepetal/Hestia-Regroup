@@ -6,13 +6,13 @@
 #include <thread>
 #include <mutex>
 
-int detected_id = -1;
+int detectedId = -1;
 std::mutex id_mutex;
 // #include <format>
 
 //--Hestia Implementation------------------------------------------
 // Constructs Hestia
-Hestia::Hestia(): original_pose_received_(false) 
+Hestia::Hestia(): originalPoseReceived(false) 
 {
     // Initialise the amount of resources required
     requiredResource = 0;
@@ -28,9 +28,9 @@ Hestia::Hestia(): original_pose_received_(false)
     flameThrower = new FlameThrower();
 
     // Initialise a client???
-    move_base_client_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true);
+    moveBaseClient = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true);
     ROS_INFO("Waiting for the move_base action server to come up");
-    move_base_client_->waitForServer();
+    moveBaseClient->waitForServer();
     ROS_INFO("Finished");
 
     // Initialise water tank subscriber
@@ -44,26 +44,26 @@ Hestia::Hestia(): original_pose_received_(false)
 
     // Initialise april tag detection subscriber
     tagSub = nh.subscribe("/tag_detection", 100, &Hestia::TagCallback, this);
-    cmd_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+    commandPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 
     // Decide where Hestia needs to go next
-    // priority_sub_ = nh.subscribe("priority_list", 1, &Hestia::priorityCallback, this);
+    // prioritySub = nh.subscribe("priority_list", 1, &Hestia::priorityCallback, this);
 
-    odom_sub_ = nh.subscribe("odom", 100, &Hestia::odomMsgCallback, this);
+    odometrySub = nh.subscribe("odom", 100, &Hestia::odomMsgCallback, this);
 
-    detected_goal_pub_ = nh.advertise<std_msgs::Int32>("/detected_goal_id", 10);
+    detectedGoalPub = nh.advertise<std_msgs::Int32>("/detected_goal_id", 10);
 }
 
 // Destructs Hestia
 Hestia::~Hestia()
 {
-    delete move_base_client_;
+    delete moveBaseClient;
 }
 
 // Callback function to receive messages from reservoir water topic
 void Hestia::odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-    current_odom_ = std::make_pair(msg->pose.pose.position.x, msg->pose.pose.position.y);
+    currentOdometry = std::make_pair(msg->pose.pose.position.x, msg->pose.pose.position.y);
     // // Compute yaw (heading) from quaternion.
     // double siny = 2.0 * (msg->pose.pose.orientation.w * msg->pose.pose.orientation.z + msg->pose.pose.orientation.x * msg->pose.pose.orientation.y);
     // double cosy = 1.0 - 2.0 * (msg->pose.pose.orientation.y * msg->pose.pose.orientation.y + msg->pose.pose.orientation.z * msg->pose.pose.orientation.z);  
@@ -110,7 +110,6 @@ void Hestia::ModeCallback(const std_msgs::String::ConstPtr& msg)
     {
         // Set hestia to fire elimination mode
         mode = 1;
-        
     }
     ROS_INFO("mode: %d",mode);
 }
@@ -118,44 +117,52 @@ void Hestia::ModeCallback(const std_msgs::String::ConstPtr& msg)
 // Callback function to receive the ID of the currently detected april tag
 void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
 {
-    detected_id = msg->data;
+    detectedId = msg->data;
     bool isProcessingGoals = false;
 
-    if (detected_id == 0 && !isProcessingGoals) {
+    if (detectedId == 0 && !isProcessingGoals) 
+    {
         std::vector<std::pair<float, float>> fireBushes = getPositions("src/hestia/data/map_data.yaml");
 
-        std::vector<geometry_msgs::Pose> goal_poses;
-        for (const auto& bush : fireBushes) {
+        std::vector<geometry_msgs::Pose> goalPose;
+        for (const auto& bush : fireBushes) 
+        {
             geometry_msgs::Pose goal;
             goal.position.x = bush.first;
             goal.position.y = bush.second;
             goal.orientation.w = 1.0;  // Assuming you want to keep the orientation constant
-            goal_poses.push_back(goal);
+            goalPose.push_back(goal);
         }
 
-        // Now, you can iterate through the goal_poses vector and send each as a goal
-        for (const auto& goal_pose : goal_poses) {
-            moveToGoal(goal_pose);
-            detected_id = -1;
+        // Now, you can iterate through the goalPose vector and send each as a goal
+        for (const auto& pose : goalPose) 
+        {
+            moveToGoal(pose);
+            detectedId = -1;
             
-            // Rotate the robot in small increments and check for detected_id
+            // Rotate the robot in small increments and check for detectedId
             int rotationIncrements = 108;  // This will divide the 360 degrees into 10-degree increments
-            for (int i = 0; i < rotationIncrements; i++) {
-                if (detected_id != -1) {
+            for (int i = 0; i < rotationIncrements; i++) 
+            {
+                if (detectedId != -1) 
+                {
                     break;  // If a tag has been detected, break out of the loop
                 }
+
                 turn(10);  // Rotate by 10 degrees
-                ros::Duration(0.1).sleep();  // Wait for half a second to give time for the callback to update detected_id
+                ros::Duration(0.1).sleep();  // Wait for half a second to give time for the callback to update detectedId
             }
+
             ROS_INFO("turned loop");
 
             // If a tag is detected, stop the robot
-            if (detected_id != -1) {
+            if (detectedId != -1) 
+            {
                 turn(90);
                 ROS_INFO("New tag detected and Turned 90");
-                std_msgs::Int32 goal_msg;
-                goal_msg.data = detected_id;
-                detected_goal_pub_.publish(goal_msg);
+                std_msgs::Int32 goalMsg;
+                goalMsg.data = detectedId;
+                detectedGoalPub.publish(goalMsg);
                 ros::Duration(5).sleep();
             }
         }
@@ -163,16 +170,16 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
     }
 }
 
-//     if (detected_id == 0) {
-//         std::thread(&Hestia::processDetectedID,this).detach();  // Start a new thread to process the detected_id
+//     if (detectedId == 0) {
+//         std::thread(&Hestia::processDetectedID,this).detach();  // Start a new thread to process the detectedId
 //     }
 // }
 // void Hestia::processDetectedID() {
 //     int local_id;
 //     {
 //         std::lock_guard<std::mutex> lock(id_mutex);
-//         local_id = detected_id;
-//         detected_id = -1;  // Reset or whatever logic you need
+//         local_id = detectedId;
+//         detectedId = -1;  // Reset or whatever logic you need
 //     }
 //     // Now, process the local_id as you need
 //     bool isProcessingGoals = false;
@@ -180,37 +187,37 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
 //     if (local_id == 0 && !isProcessingGoals) {
 //         std::vector<std::pair<float, float>> fireBushes = getPositions("src/hestia/data/map_data.yaml");
 
-//         std::vector<geometry_msgs::Pose> goal_poses;
+//         std::vector<geometry_msgs::Pose> goalPose;
 //         for (const auto& bush : fireBushes) {
 //             geometry_msgs::Pose goal;
 //             goal.position.x = bush.first;
 //             goal.position.y = bush.second;
 //             goal.orientation.w = 1.0;  // Assuming you want to keep the orientation constant
-//             goal_poses.push_back(goal);
+//             goalPose.push_back(goal);
 //         }
 
-//         // Now, you can iterate through the goal_poses vector and send each as a goal
-//         for (const auto& goal_pose : goal_poses) {
-//             moveToGoal(goal_pose);
+//         // Now, you can iterate through the goalPose vector and send each as a goal
+//         for (const auto& pose : goalPose) {
+//             moveToGoal(pose);
 
-//             // Rotate the robot in small increments and check for detected_id
+//             // Rotate the robot in small increments and check for detectedId
 //             int rotationIncrements = 108;  // This will divide the 360 degrees into 10-degree increments
 //             for (int i = 0; i < rotationIncrements; i++) {
-//                 if (detected_id != -1) {
+//                 if (detectedId != -1) {
 //                     break;  // If a tag has been detected, break out of the loop
 //                 }
 //                 turn(10);  // Rotate by 10 degrees
-//                 ros::Duration(0.1).sleep();  // Wait for half a second to give time for the callback to update detected_id
+//                 ros::Duration(0.1).sleep();  // Wait for half a second to give time for the callback to update detectedId
 //             }
 //             ROS_INFO("turned loop");
 
 //             // If a tag is detected, stop the robot
-//             if (detected_id != -1) {
+//             if (detectedId != -1) {
 //                 turn(90);
 //                 ROS_INFO("New tag detected and Turned 90");
-//                 std_msgs::Int32 goal_msg;
-//                 goal_msg.data = detected_id;
-//                 detected_goal_pub_.publish(goal_msg);
+//                 std_msgs::Int32 goalMsg;
+//                 goalMsg.data = detectedId;
+//                 detectedGoalPub.publish(goalMsg);
 //                 ros::Duration(5).sleep();
 //             }
 //         }
@@ -219,19 +226,19 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
 // }
 
 // Drive Hestia to destination
-void Hestia::moveToGoal(const geometry_msgs::Pose& goal_pose) 
+void Hestia::moveToGoal(const geometry_msgs::Pose& goalPose) 
 {
     move_base_msgs::MoveBaseGoal goal;
 
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
-    goal.target_pose.pose = goal_pose;
+    goal.target_pose.pose = goalPose;
 
-    ROS_INFO("Sending goal to move_base: x = %f, y = %f", goal_pose.position.x, goal_pose.position.y);
-    move_base_client_->sendGoal(goal);
-    move_base_client_->waitForResult();
+    ROS_INFO("Sending goal to move_base: x = %f, y = %f", goalPose.position.x, goalPose.position.y);
+    moveBaseClient->sendGoal(goal);
+    moveBaseClient->waitForResult();
 
-    if (move_base_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) 
+    if (moveBaseClient->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) 
     {
         ROS_INFO("Goal reached!");
     }
@@ -241,7 +248,8 @@ void Hestia::moveToGoal(const geometry_msgs::Pose& goal_pose)
     }
 }
 
-void Hestia::turn(float degrees) {
+void Hestia::turn(float degrees) 
+{
     
     // Assuming you have a publisher to cmd_vel to control the robot
 
@@ -252,8 +260,9 @@ void Hestia::turn(float degrees) {
 
     ros::Rate rate(10);  // 10Hz
     float elapsedTime = 0;
-    while (elapsedTime < duration) {
-        cmd_pub.publish(twist);
+    while (elapsedTime < duration) 
+    {
+        commandPub.publish(twist);
         ROS_INFO("turning");
         rate.sleep();
         elapsedTime += 0.1;  // Since we're sleeping for 0.1 seconds
@@ -261,7 +270,7 @@ void Hestia::turn(float degrees) {
 
     // Stop the robot
     twist.angular.z = 0;
-    cmd_pub.publish(twist);
+    commandPub.publish(twist);
 }
 
 

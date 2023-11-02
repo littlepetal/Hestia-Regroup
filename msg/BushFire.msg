@@ -1,3 +1,3 @@
-int32 bush_id
-bool is_on_fire
-int32 fire_intensity
+int32 bushId
+bool isOnFire
+int32 fireIntensity

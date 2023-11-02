@@ -1,3 +1,4 @@
+//--Includes-----------------------------------------------------------
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <yaml-cpp/yaml.h>
@@ -5,10 +6,11 @@
 #include <map>
 #include <visualization_msgs/Marker.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
   ros::init(argc, argv, "marker_publisher");
   ros::NodeHandle nh;
-  ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+  ros::Publisher markerPub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
   uint32_t shape = visualization_msgs::Marker::CUBE;
 
@@ -36,17 +38,20 @@ int main(int argc, char** argv) {
   // Load the YAML file
   YAML::Node config = YAML::LoadFile("src/hestia/data/map_data.yaml");
 
-  int marker_id = 0;
-  while (ros::ok()) {
-    for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
-      std::string bush_name = it->first.as<std::string>();
+  int markerId = 0;
+  while (ros::ok()) 
+  {
+    for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) 
+    {
+      std::string bushName = it->first.as<std::string>();
       YAML::Node bush_data = it->second;
 
       bool isOnFire = false; // default value
-      if(bush_data["onFire"]) {
+      if(bush_data["onFire"]) 
+      {
         isOnFire = bush_data["onFire"].as<bool>();
       }
-      ROS_INFO_STREAM("Bush Name: " << bush_name << ", On Fire: " << (isOnFire ? "Yes" : "No"));
+      ROS_INFO_STREAM("Bush Name: " << bushName << ", On Fire: " << (isOnFire ? "Yes" : "No"));
 
       // Set marker color based on onFire value
       if (isOnFire) 
@@ -71,7 +76,7 @@ int main(int argc, char** argv) {
       
       marker.color.a = 1.0;  // Alpha (opacity)
 
-      marker.id = marker_id++;
+      marker.id = markerId++;
 
       marker.pose.position.x = bush_data["position"][0].as<double>();
       marker.pose.position.y = bush_data["position"][1].as<double>();
@@ -82,9 +87,11 @@ int main(int argc, char** argv) {
       marker.pose.orientation.z = 0.0;
       marker.pose.orientation.w = 1.0;
 
-      marker_pub.publish(marker);
+      markerPub.publish(marker);
     }
+
     ros::Duration(1.0).sleep();
   }
+
   return 0;
 }
