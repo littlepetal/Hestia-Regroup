@@ -65,21 +65,48 @@ void Bushland::odomMsgCallback(const nav_msgs::Odometry::ConstPtr &msg)
 void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg) 
 {
     int detectedId = msg->data;
-    
-    //At start point (reservoir position)
-    if (detectedId == 0) 
+
+    if (mode == "Start Mapping")
     {
-        ROS_INFO("Detect start point");
-
-        if (reservoir.empty()) 
+        if (detectedId == 0)
         {
-            //
-            Reservoir newReservoir(detectedId, currentOdometry); 
-            reservoir.push_back(newReservoir);
+            if (reservoir.empty()) 
+            {
+                //
+                Reservoir newReservoir(detectedId, currentOdometry); 
+                reservoir.push_back(newReservoir);
+            }
         }
-
-        if (mode == "Start Fire Eliminating")
+        else if (detectedId >= 1 && detectedId <= 4) 
         {
+            ROS_INFO("Detect bush: %d", detectedId);
+            // Check if the bush with this ID already exists
+            auto it = std::find_if(bush.begin(), bush.end(), [detectedId](const Bush& bush) { return bush.getTagID() == detectedId; });
+            
+            if (it == bush.end()) 
+            { 
+                // If the bush does not exist
+                bool status = false;
+                
+                // Assume a bush to do control burning
+                if (detectedId == 4)  {status = true; }
+    
+                // Create new bush object
+                Bush new_bush(detectedId, currentOdometry, false, 0, status);
+                bush.push_back(new_bush);
+            } 
+        }
+    }
+    else if (mode == "Start Control Burning")
+    {
+        
+    }
+    else if (mode == "Start Fire Eliminating")
+    {
+        //At start point (reservoir position)
+        if (detectedId == 0) 
+        {
+            ROS_INFO("Detect start point");
             std_msgs::Int32 water;
             int requiredWater = 0;
             
@@ -98,54 +125,16 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
 
             // Sort the bushes based on fire intensity, reorder the map so that hestia knows where to go first
             std::sort(bush.begin(), bush.end(), [](const Bush& a, const Bush& b) { return a.fireIntensity > b.fireIntensity; });
-            // reMap();
-
-            // ROS_INFO("Number of bushes after reMap: %zu", bush.size());
-            // if (!bush.empty() && bush.front().onFire) 
-            // {
-            //     ROS_INFO("Bush with highest fire intensity ID: %d", bush.front().id);
-                
-            //     std_msgs::Int32 msg;
-            //     // msg.data.push_back(bush.front().id);
-            //     // fire_bush_ids_pub_.publish(msg);
-            // }
-            
-            // for (const Bush& bush : bush) {
-            //     if (bush.onFire) {
-            //         ROS_INFO("On fire bush ID: %d", bush.id);
-            //     }
-            // }
-            
-            // std_msgs::Int32MultiArray msg;
-            // for (const Bush& bush : bush) {
-            //     if (bush.onFire) {
-            //         msg.data.push_back(bush.id);
-            //     }
-            // }
-            // fire_bush_ids_pub_.publish(msg);
+            reMap();
         }
-    }
-    // Check if the detected ID is between 1 and 4 indicating bush
-    else if (detectedId >= 1 && detectedId <= 4) 
-    {
-        ROS_INFO("Detect bush: %d", detectedId);
-        // Check if the bush with this ID already exists
-        auto it = std::find_if(bush.begin(), bush.end(), [detectedId](const Bush& bush) { return bush.getTagID() == detectedId; });
-        
-        if (it == bush.end()) 
-        { 
-            // If the bush does not exist
-            bool status = false;
-            
-            // Assume a bush to do control burning
-            if (detectedId == 4)  {status = true; }
 
-            // Create new bush object
-            Bush new_bush(detectedId, currentOdometry, false, 0, status);
-            bush.push_back(new_bush);
-        } 
-        else 
-        { 
+        // Check if the detected ID is between 1 and 4 indicating bush
+        else if (detectedId >= 1 && detectedId <= 4) 
+        {
+            ROS_INFO("Detect bush: %d", detectedId);
+            // Check if the bush with this ID already exists
+            auto it = std::find_if(bush.begin(), bush.end(), [detectedId](const Bush& bush) { return bush.getTagID() == detectedId; });
+    
             // If the bush exists and is on fire, reduce its fire intensity
             if (it->onFire) 
             {
