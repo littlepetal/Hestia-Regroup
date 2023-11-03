@@ -25,19 +25,15 @@ void Bushland::waterMsgCallback(const std_msgs::Int32::ConstPtr &msg)
 void Bushland::goalCallback(const std_msgs::Int32::ConstPtr &msg)
 {
     int goaId = msg->data;
-
+    
+    // id 1-4 indicates bush
     if (goaId >= 1 && goaId <= 4) 
     {
         ROS_INFO("Reached bush: %d and putout fire",goaId);
 
         // Check if the bush with this ID already exists
         auto it = std::find_if(bush.begin(), bush.end(), [goaId](const Bush& bush) { return bush.getTagID() == goaId; });
-
-        // if (it == bush.end()) { // If the bush does not exist
-        //     Bush new_bush(detectedId, currentOdometry, false, 0);
-        //     bush.push_back(new_bush);
-        // } else { 
-        //     // If the bush exists and is on fire, reduce its fire intensity
+        // If the bush exists and is on fire, reduce its fire intensity
         if (it->onFire) 
         {
             // int newFireIntensity = it->fireIntensity - waterReceived;
@@ -49,8 +45,6 @@ void Bushland::goalCallback(const std_msgs::Int32::ConstPtr &msg)
                 it->onFire = false;
             }
             it->setFireStatus(it->onFire, newFireIntensity);
-        // }
-        // }
         }
     }
 
@@ -71,48 +65,50 @@ void Bushland::odomMsgCallback(const nav_msgs::Odometry::ConstPtr &msg)
 void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg) 
 {
     int detectedId = msg->data;
-
+    
+    //At start point (reservoir position)
     if (detectedId == 0) 
     {
         ROS_INFO("Detect start point");
 
         if (reservoir.empty()) 
         {
+            //
             Reservoir newReservoir(detectedId, currentOdometry); 
             reservoir.push_back(newReservoir);
         }
 
         if (mode == "Start Fire Eliminating")
         {
-            // Calculate the total water needed
             std_msgs::Int32 water;
-                
             int requiredWater = 0;
+            
+            // Calculate the total water needed
             for (const Bush& bush : bush) 
             {
                 if (bush.onFire) {
-                    requiredWater += bush.fireIntensity;  // Here, we assume the fireIntensity directly indicates the amount of water needed
+                    requiredWater += bush.fireIntensity;
                 }
             }
 
+            // Publish water needed to Hestia, 
             ROS_INFO("Water needed %d",requiredWater);
-
             water.data = requiredWater;
             waterPub.publish(water);
 
-            // Sort the bushes based on fire intensity
+            // Sort the bushes based on fire intensity, reorder the map so that hestia knows where to go first
             std::sort(bush.begin(), bush.end(), [](const Bush& a, const Bush& b) { return a.fireIntensity > b.fireIntensity; });
             // reMap();
 
-            ROS_INFO("Number of bushes after reMap: %zu", bush.size());
-            if (!bush.empty() && bush.front().onFire) 
-            {
-                ROS_INFO("Bush with highest fire intensity ID: %d", bush.front().id);
+            // ROS_INFO("Number of bushes after reMap: %zu", bush.size());
+            // if (!bush.empty() && bush.front().onFire) 
+            // {
+            //     ROS_INFO("Bush with highest fire intensity ID: %d", bush.front().id);
                 
-                std_msgs::Int32 msg;
-                // msg.data.push_back(bush.front().id);
-                // fire_bush_ids_pub_.publish(msg);
-            }
+            //     std_msgs::Int32 msg;
+            //     // msg.data.push_back(bush.front().id);
+            //     // fire_bush_ids_pub_.publish(msg);
+            // }
             
             // for (const Bush& bush : bush) {
             //     if (bush.onFire) {
@@ -129,23 +125,22 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
             // fire_bush_ids_pub_.publish(msg);
         }
     }
-    // Check if the detected ID is between 2 and 5
+    // Check if the detected ID is between 1 and 4 indicating bush
     else if (detectedId >= 1 && detectedId <= 4) 
     {
         ROS_INFO("Detect bush: %d", detectedId);
         // Check if the bush with this ID already exists
         auto it = std::find_if(bush.begin(), bush.end(), [detectedId](const Bush& bush) { return bush.getTagID() == detectedId; });
-
+        
         if (it == bush.end()) 
         { 
             // If the bush does not exist
             bool status = false;
+            
+            // Assume a bush to do control burning
+            if (detectedId == 4)  {status = true; }
 
-            if (detectedId == 4)
-            {
-                status = true;
-            }
-
+            // Create new bush object
             Bush new_bush(detectedId, currentOdometry, false, 0, status);
             bush.push_back(new_bush);
         } 
@@ -154,22 +149,16 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
             // If the bush exists and is on fire, reduce its fire intensity
             if (it->onFire) 
             {
-                // int newFireIntensity = it->fireIntensity - waterReceived;
-                int newFireIntensity = 0;
-
+                int newFireIntensity = it->fireIntensity - waterReceived;
                 if (newFireIntensity <= 0) 
                 {
                     newFireIntensity = 0;
                     it->onFire = false;
                 }
-
                 it->setFireStatus(it->onFire, newFireIntensity);
             }
         }
     }
-    // else if (detectedId == 6) {
-    //     Reservoir(detectedId, currentOdometry); 
-    // }
     saveAndUpdate();
 }
 
@@ -185,7 +174,7 @@ void Bushland::fireInfoCallback(const hestia::BushFire::ConstPtr& msg)
             bush.setFireStatus(msg->isOnFire, msg->fireIntensity);
         }
     }
-
+    // Update the map
     saveAndUpdate();
 }
 
