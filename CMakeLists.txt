@@ -53,15 +53,15 @@ include_directories(
 )
 
 ## Declare a C++ executable
-qt5_wrap_cpp(MOC_FILES include/hestia/user_interface.h)
+qt5_wrap_cpp(MOC_FILES include/hestia/UserInterface.h)
 
-add_executable(ui_node src/user_interface.cpp src/user_interface_node.cpp ${MOC_FILES})
+add_executable(ui_node src/UserInterface.cpp src/user_interface_node.cpp ${MOC_FILES})
 
-add_executable(bushland_node src/bushland.cpp src/bushland_node.cpp)
+add_executable(bushland_node src/Bushland.cpp src/bushland_node.cpp)
 
 add_executable(hestia_node src/Hestia.cpp src/hestia_node.cpp)
 
-add_executable(apriltag_detector_node src/apriltag_detector.cpp src/apriltag_detector_node.cpp)
+add_executable(apriltag_detector_node src/ApriltagDetector.cpp src/apriltag_detector_node.cpp)
 
 add_dependencies(ui_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
