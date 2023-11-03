@@ -19,99 +19,23 @@
 #include <thread>
 #include <mutex>
 
-//--Device Interface---------------------------------------------------
-class Device
-{
-    public:
-
-        // Constructs a device
-        Device();
-
-        // Deconstructs the device
-        virtual ~Device();
-
-        // Loads the device
-        // virtual void Load(Reservoir* reservoir, int level);
-        virtual void Load(int level);
-
-        // Deploys the device
-        // virtual void Deploy(Monitor* bushland, int bushID);
-        virtual void Deploy(int bushID, int level);
-
-    protected:
-
-        // Keeps track of the number of available resources
-        int availableResource;
-
-        // Node handle for Hestia
-        ros::NodeHandle nh;
-};
-
-//--HydroBlaster Interface---------------------------------------------------
-class HydroBlaster: public Device
-{
-    public:
-
-        // Constructs a hydro blaster
-        HydroBlaster();
-
-        // Deconstructs the hydro blaster
-        ~HydroBlaster();
-
-        // Increases the number of available water by level amount
-        void Load(int level);
-
-        // Blasts water at the bush indicated by bushID
-        void Deploy(int bushID, int level);
-
-    private:
-
-        // Publishes water blasted at fire of interest to monitor 
-        // in the bushland node
-        ros::Publisher waterBlasterPub;
-        
-};
-
-//--FlameThrower Interface---------------------------------------------------
-class FlameThrower: public Device
-{
-    public:
-
-        // Constructs a flame thrower
-        FlameThrower();
-
-        // Deconstructs the flame thrower
-        ~FlameThrower();
-
-        // Increases the number of available gas by level amount
-        void Load(int level);
-
-        // Throws flames at the bush indicated by bushID
-        void Deploy(int bushID, int level);
-        
-    private:
-    
-        // Publishes flame thrown at hazard of interest to monitor 
-        // in the bushland node
-        ros::Publisher flameThrowerPub;
-};
+#include "Device.h"
 
 //--Hestia Interface---------------------------------------------------
 class Hestia
 {
     public:
 
-        // Construct a Hestia
+        // Constructs a Hestia
         Hestia();
 
-        // Destruct the Hestia
+        // Destructs the Hestia
         ~Hestia();
 
     private:
 
+        // Mutual exclusion lock
         std::mutex IdMutex;
-
-        void processDetectedID();
 
         // Keeps track of the amount of resources needed
         int requiredResource;
@@ -176,10 +100,10 @@ class Hestia
 
         // Command prompt velocity publisher
         ros::Publisher commandPub;
-        // A client???
-        actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* moveBaseClient;
-        
-        void turn(float degrees);
+
+
+        // 
+        void processDetectedID();
 
         // Callback for the water tank subscriber
         void WaterTankCallback(const std_msgs::Int32::ConstPtr& msg);
@@ -193,13 +117,16 @@ class Hestia
         // Callback for the april tag subscriber
         void TagCallback(const std_msgs::Int32::ConstPtr& msg);
 
-        // Drive Hestia to destination
+        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
+
+        // Navstack move base client 
+        actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* moveBaseClient;
+
+        // Drive Hestia to the given goal pose
         void moveToGoal(const geometry_msgs::Pose& goalPose);
 
-        // Decide where Hestia needs to go next
-        // void priorityCallback(const std_msgs::String::ConstPtr& msg);
-
-        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
+        // Turns the Hestia bot by the given degrees
+        void turn(float degrees);
 
         std::vector<std::pair<float, float>> getPositions(const std::string& filename);
 };
