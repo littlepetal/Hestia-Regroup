@@ -9,8 +9,8 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     
     Bushland bushland(nh);
-    Visualizer visualizer(nh, "visualization_marker", "map", "src/hestia/data/map_data.yaml");
-    visualizer.run();
+    Visualiser visualiser(nh, "visualization_marker", "map", "src/hestia/data/map_data.yaml");
+    visualiser.run();
 
     ros::spin();
 
