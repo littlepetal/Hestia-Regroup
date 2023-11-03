@@ -1,5 +1,5 @@
 //--Includes-----------------------------------------------------------
-#include "hestia/apriltag_detector.h"
+#include "hestia/ApriltagDetector.h"
 
 int main(int argc, char** argv) 
 {

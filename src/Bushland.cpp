@@ -2,7 +2,7 @@
 #include "hestia/Bushland.h"
 
 //--Bushland Implementation---------------------------------------------------
-Bushland::Bushland() 
+Bushland::Bushland(ros::NodeHandle& nh) : nh(nh)
 {
     ROS_INFO("Bushland node started");
     tagDetectionSub = nh.subscribe("/tag_detection", 100, &Bushland::tagDetectionCallback, this);

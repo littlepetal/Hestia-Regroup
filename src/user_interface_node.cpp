@@ -1,5 +1,5 @@
 //--Includes-----------------------------------------------------------
-#include "hestia/user_interface.h"
+#include "hestia/UserInterface.h"
 #include <QApplication>
 
 int main(int argc, char **argv) 
