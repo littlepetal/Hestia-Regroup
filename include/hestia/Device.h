@@ -43,11 +43,8 @@ class Device
         // Keeps track of the number of available resources
         int availableResource;
 
-        // Node handle for Hestia
-        ros::NodeHandle nh;
-
-        // Publishes how much resource the device load 
-        ros::Publisher loadPub;
+        ros::Publisher loadResourcesPub;  // Publisher for loading onboard water and gas resources 
+        ros::Publisher deployResourcesPub;  // Publisher for deploying onboard water and gas resources 
 };
 
 //--HydroBlaster Interface---------------------------------------------------

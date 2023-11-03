@@ -2,7 +2,9 @@
 #include "hestia/Hestia.h"
 
 //--Hestia Implementation------------------------------------------
-// Constructs Hestia
+// Constructs Hestia and its hydro blaster and flame thrower
+// Constructs a move base client for Navstack
+// Initialises Hestia's publishers and subscribers
 Hestia::Hestia()
 {
     // Initialise the amount of resources required
@@ -18,107 +20,85 @@ Hestia::Hestia()
     hydroBlaster = new HydroBlaster();
     flameThrower = new FlameThrower();
 
-    // Initialise a client???
+    // Initialise the Navstack move base client
     moveBaseClient = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true);
     ROS_INFO("Waiting for the move_base action server to come up");
     moveBaseClient->waitForServer();
     ROS_INFO("Finished");
 
-    // Initialise water tank subscriber
-    waterTankSub = nh.subscribe("/reservoir_water_status", 100, &Hestia::WaterTankCallback, this);
-
-    // Initialise gas tank subscriber
-    gasTankSub = nh.subscribe("/reservoir_gas_status", 100, &Hestia::GasTankCallback, this);
-
-    // Initialise operation mode subscriber
+    // Initialise subscribers
     modeSub = nh.subscribe("/operation_mode_topic", 100, &Hestia::ModeCallback, this);
-
-    // Initialise april tag detection subscriber
     tagSub = nh.subscribe("/tag_detection", 100, &Hestia::TagCallback, this);
-    cmdPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
-
-    // Decide where Hestia needs to go next
-    // prioritySub = nh.subscribe("priority_list", 1, &Hestia::priorityCallback, this);
-
     odometrySub = nh.subscribe("odom", 100, &Hestia::odomMsgCallback, this);
+    requiredWaterSub = nh.subscribe("/required_water", 100, &Hestia::requiredWaterCallback, this);
 
+    // Initialise publishers
+    cmdPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
     detectedGoalPub = nh.advertise<std_msgs::Int32>("/detected_goal_id", 10);
 }
 
-// Destructs Hestia. Deallocates memory for the Navstack move base client
+// Destructs Hestia. Deallocates memory for the devices and Navstack move base client
 Hestia::~Hestia()
 {
+    delete hydroBlaster;
+    delete flameThrower;
+
     delete moveBaseClient;
 }
 
-// Callback function to receive messages from reservoir water topic
+// Callback function to receive messages from Turtlebot odometry topic
 void Hestia::odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
+    // Make coordinates from odometry
     currentOdometry = std::make_pair(msg->pose.pose.position.x, msg->pose.pose.position.y);
-    // // Compute yaw (heading) from quaternion.
-    // double siny = 2.0 * (msg->pose.pose.orientation.w * msg->pose.pose.orientation.z + msg->pose.pose.orientation.x * msg->pose.pose.orientation.y);
-    // double cosy = 1.0 - 2.0 * (msg->pose.pose.orientation.y * msg->pose.pose.orientation.y + msg->pose.pose.orientation.z * msg->pose.pose.orientation.z);  
-    // tb3_pose_ = atan2(siny, cosy);
 }
 
-
-// Callback function to receive messages from reservoir water topic
-void Hestia::WaterTankCallback(const std_msgs::Int32::ConstPtr& msg)
-{
-    ROS_INFO("I heard: [%d]", msg->data);
-
-    // Load hestia with water
-    if (msg->data > requiredResource)
-    {
-        hydroBlaster->Load(requiredResource);
-    }
-}
-
-// Callback function to receive messages from reservoir gas topic
-void Hestia::GasTankCallback(const std_msgs::Int32::ConstPtr& msg)
-{
-    ROS_INFO("I heard: [%d]", msg->data);
-
-    // Load hestia with gas
-    if (msg->data > requiredResource)
-    {
-        flameThrower->Load(requiredResource);
-    }
-}
-
-// Callback function to receive the mode of operation from operation mode topic
+// Callback function to receive the mode of operation from user interface
 void Hestia::ModeCallback(const std_msgs::String::ConstPtr& msg)
 {
     ROS_INFO("I heard: [%s]", msg->data.c_str());
 
-    // Set the operation mode of hestia depenidng on the signal
+    // Set the operation mode of Hestia depenidng on the signal
     if (strcmp(msg->data.c_str(), "Start Control Burning") == 0)
     {
-        // Set hestia to controlled burning mode
+        // Set Hestia to controlled burning mode
         mode = 0;
     }
     else if (strcmp(msg->data.c_str(), "Start Fire Eliminating") == 0)
     {
-        // Set hestia to fire elimination mode
+        // Set Hestia to fire elimination mode
         mode = 1;
     }
     ROS_INFO("mode: %d",mode);
 }
 
-// Callback function to receive the ID of the currently detected april tag
+// Callback function to receive the ID of the currently detected Apriltag
 void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
 {
     detectedId = msg->data;
 
+    // Start a process if Hestia is back at the reservoir
     if (detectedId == 0) 
     {
         std::thread(&Hestia::processDetectedID,this).detach();  // Start a new thread to process the detectedId
     }
 }
 
-void Hestia::requiredResourcesCallback(const std_msgs::Int32::ConstPtr& msg)
+// Callback function to receive the calculated amount of onboard water or gas resources needed
+// for Hestia to perform its planned operations
+void Hestia::requiredWaterCallback(const std_msgs::Int32::ConstPtr& msg)
 {
+    requiredResource = msg->data;
 
+    // Load the hydro blaster or flame thrower depending on the operation mode
+    if (mode == 0)
+    {
+        flameThrower.Load(requiredResources);
+    }
+    else
+    {
+        hydroBlaster->Load(requiredResources);
+    }  
 }
 
 // Navigates Hestia and performs controlled burning or fire elimination 
@@ -195,6 +175,16 @@ void Hestia::processDetectedID()
                 // Create goal message using the detected Apriltag ID
                 std_msgs::Int32 goalMsg;
                 goalMsg.data = detectedId;
+
+                // Deploy the hydro blaster or flame thrower depending on the operation mode
+                if (mode == 0)
+                {
+                    flameThrower.Deploy(detectedId, requiredResources);
+                }
+                else
+                {
+                    hydroBlaster->Deploy(detectedId, requiredResources);
+                }                
 
                 // Publish the goal message
                 detectedGoalPub.publish(goalMsg);

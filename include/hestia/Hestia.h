@@ -32,10 +32,10 @@ class Hestia
 {
     public:
 
-        // Constructs a Hestia
+        // Constructs Hestia and its Devices and Navstack client
         Hestia();
 
-        // Destructs the Hestia
+        // Destructs the Hestia and its Devices and Navstack client
         ~Hestia();
 
     private:
@@ -51,21 +51,19 @@ class Hestia
 
         std::pair<float, float> currentOdometry;  // Current odometry of Hestia
 
+        ros::NodeHandle nh;  // Node handle for Hestia
+
         // The devices on Hestia
         HydroBlaster* hydroBlaster;
         FlameThrower* flameThrower;       
 
-        ros::NodeHandle nh;  // Node handle for Hestia
-
         ros::Subscriber modeSub; // Subscriber to the operation mode
         ros::Subscriber tagSub;  // Subscriber to the currently detected Apriltag ID
         ros::Subscriber odometrySub;  // Subscriber to Turtlebot odometry
+        ros::Subscriber requiredWaterSub;  // Subscriber to the amount of water required
 
         ros::Publisher detectedGoalPub; // Publisher goal detection
         ros::Publisher cmdPub;  // Publisher for Turtlebot velocity 
-
-        ros::Publisher loadResources;  // Publisher for loading onboard water and gas resources 
-        ros::Publisher deployResources;  // Publisher for deploying onboard water and gas resources 
 
         // Callback for the operation mode subscriber
         void ModeCallback(const std_msgs::String::ConstPtr& msg);
@@ -77,7 +75,7 @@ class Hestia
         void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
 
         // Callback for the calculated required water amount from bushland
-        void requiredResoucesCallback(const std_msgs::Int32::ConstPtr& msg);
+        void requiredWaterCallback(const std_msgs::Int32::ConstPtr& msg);
 
         // Perform the controlled burning or fire elimination operations
         void processDetectedID();
