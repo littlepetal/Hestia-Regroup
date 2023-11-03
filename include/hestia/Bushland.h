@@ -94,7 +94,7 @@ class Bushland
         }
 
         // Constructs a bushland
-        Bushland();
+        Bushland(ros::NodeHandle& nh);
 
         // Water blaster callback
         void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);
