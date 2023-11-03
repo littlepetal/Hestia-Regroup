@@ -42,23 +42,6 @@ AprilTagDetector::~AprilTagDetector()
     tag36h11_destroy(tf);
 }
 
-// Calculates tag size according to the pixel position of the four corners
-double computeTagSize(const apriltag_detection_t* tag) 
-{
-    // Initialise the coordinates of the four corners
-    double x0 = tag->p[0][0], y0 = tag->p[0][1];
-    double x1 = tag->p[1][0], y1 = tag->p[1][1];
-    double x2 = tag->p[2][0], y2 = tag->p[2][1];
-    double x3 = tag->p[3][0], y3 = tag->p[3][1];
-    
-    // Estimate the tag size using the average lenght of the two diagonals
-    double d1 = sqrt((x0 - x2) * (x0 - x2) + (y0 - y2) * (y0 - y2));
-    double d2 = sqrt((x1 - x3) * (x1 - x3) + (y1 - y3) * (y1 - y3));
-
-    // Return tag size
-    return (d1 + d2) / 2.0;
-}
-
 // Callback function for receiving images from the camera
 void AprilTagDetector::imageCallback(const sensor_msgs::CompressedImageConstPtr& msg) 
 {
@@ -115,4 +98,21 @@ void AprilTagDetector::imageCallback(const sensor_msgs::CompressedImageConstPtr&
 
     // Deallocate memory for the array of detected Apriltags
     apriltag_detections_destroy(detections);
+}
+
+// Calculates tag size according to the pixel position of the four corners
+double ApriltagDetector::computeTagSize(const apriltag_detection_t* tag) 
+{
+    // Initialise the coordinates of the four corners
+    double x0 = tag->p[0][0], y0 = tag->p[0][1];
+    double x1 = tag->p[1][0], y1 = tag->p[1][1];
+    double x2 = tag->p[2][0], y2 = tag->p[2][1];
+    double x3 = tag->p[3][0], y3 = tag->p[3][1];
+    
+    // Estimate the tag size using the average lenght of the two diagonals
+    double d1 = sqrt((x0 - x2) * (x0 - x2) + (y0 - y2) * (y0 - y2));
+    double d2 = sqrt((x1 - x3) * (x1 - x3) + (y1 - y3) * (y1 - y3));
+
+    // Return tag size
+    return (d1 + d2) / 2.0;
 }
