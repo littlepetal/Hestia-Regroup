@@ -38,7 +38,7 @@ void Bushland::goalCallback(const std_msgs::Int32::ConstPtr &msg)
     else if (mode == "Start Fire Eliminating")
     {
         // id 1-4 indicates bush
-        if (goalId >= 1 && goalId <= 4) 
+        if (goalId >= BUSH1 && goalId <= BUSH4) 
         {
             ROS_INFO("Reached bush: %d and putout fire",goalId);
     
@@ -84,7 +84,7 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
                 reservoir.push_back(newReservoir);
             }
         }
-        else if (detectedId >= 1 && detectedId <= 4) 
+        else if (detectedId >= BUSH1 && detectedId <= BUSH4) 
         {
             ROS_INFO("Detect bush: %d", detectedId);
 
@@ -97,7 +97,7 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
                 bool status = false;
                 
                 // Assume a bush to do control burning
-                if (detectedId == 4)  {status = true; }
+                if (detectedId == BUSH4)  {status = true; }
     
                 // Create new bush object
                 Bush new_bush(detectedId, currentOdometry, false, 0, status);
@@ -109,7 +109,7 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
     else if (mode == "Start Fire Eliminating")
     {
         //At start point (reservoir position)
-        if (detectedId == 0) 
+        if (detectedId == RESERVOIR) 
         {
             ROS_INFO("Detect start point");
             std_msgs::Int32 water;

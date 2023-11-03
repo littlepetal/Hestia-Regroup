@@ -93,28 +93,16 @@ class Bushland
             reservoir.push_back(res);
         }
 
-        // Constructs a bushland
-        Bushland(ros::NodeHandle& nh);
+        Bushland(ros::NodeHandle& nh);  // Constructs a bushland
+        
+        void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);    // Water blaster callback     
+        void goalCallback(const std_msgs::Int32::ConstPtr& msg);    // Navigation callback at goal       
+        void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);    // Apriltag detection callback     
+        void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);   // UI fires callback     
+        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);  // Tutlebot odometry callback 
+        void modeCallback(const std_msgs::String::ConstPtr& msg);   // Operation mode callback
 
-        // Water blaster callback
-        void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);
-
-        // Navigation callback at goal
-        void goalCallback(const std_msgs::Int32::ConstPtr& msg);
-
-        // Apriltag detection call back
-        void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);
-
-        // UI fires callback 
-        void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);
-
-        // Tutlebot odometry callback to save odometry for navigation
-        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
-
-        // UI operation mode callback
-        void modeCallback(const std_msgs::String::ConstPtr& msg);
-
-        // Save and update YAML file
+        // Save and update YAML map file
         void saveAndUpdate();
 
         // Sort the fire intensities in the YAML file
@@ -122,6 +110,14 @@ class Bushland
 
     private:
 
+        enum tagId {
+            RESERVOIR = 0,
+            BUSH1 = 1,
+            BUSH2 = 2,
+            BUSH3 = 3,
+            BUSH4 = 4
+        };
+        
         ros::NodeHandle &nh;
         
         ros::Subscriber tagDetectionSub; // Apriltag detector subscriber  
