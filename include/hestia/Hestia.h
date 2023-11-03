@@ -22,6 +22,12 @@
 #include "Device.h"
 
 //--Hestia Interface---------------------------------------------------
+// Hestia is responsible for using Navstack to move the Turtlebot 
+// to the goal destinations. On top of navigation, Hestia is responsible 
+// for the onboard hydro blaster and flame thrower. Hestia loads 
+// the hydro blaster with water and the flame thrower with gas.
+// Water and gas are simplefied as resources. Hestia performs controlled
+// burning and fire elimination by deploying the onboard devices at the bushes
 class Hestia
 {
     public:
@@ -34,90 +40,47 @@ class Hestia
 
     private:
 
-        // Mutual exclusion lock
-        std::mutex IdMutex;
+        std::mutex IdMutex;  // Mutual exclusion lock
 
-        // Keeps track of the amount of resources needed
-        int requiredResource;
+        int mode;  // Current Operation mode
+        int requiredResource;  // Amount of onboard resources required
 
-        // The ID of the last detected april tag
-        int currentId;
+        int detectedId;  // The Apriltag ID detected
+        std::map<int, geometry_msgs::Pose> tagPose;  // Apriltag pose
+        geometry_msgs::Pose originalPose;  // Previous pose
 
-        // enum OperationMode
-        // {
-        //     UNDEFINED = -1
-        //     CONTROLLED_BURNING = 0,
-        //     FIRE_ELIMINATION = 1
-        // };
-
-        // OperationMode mode;
-
-        // Current Operation mode
-        int mode;
-
-        // April tag pose
-        std::map<int, geometry_msgs::Pose> tagPose;
-
-        // Previous pose
-        geometry_msgs::Pose originalPose;
-
-        //
-        bool originalPoseReceived;
-
-        //
-        std::pair<float, float> currentOdometry;
-        int detectedId;
+        std::pair<float, float> currentOdometry;  // Current odometry of Hestia
 
         // The devices on Hestia
         HydroBlaster* hydroBlaster;
         FlameThrower* flameThrower;       
 
-        // Node handle for Hestia
-        ros::NodeHandle nh;
+        ros::NodeHandle nh;  // Node handle for Hestia
 
-        // Subscribe to water loaded from reservoir 
-        // in the bushland node
-        ros::Subscriber waterTankSub;
+        ros::Subscriber modeSub; // Subscriber to the operation mode
+        ros::Subscriber tagSub;  // Subscriber to the currently detected Apriltag ID
+        ros::Subscriber odometrySub;  // Subscriber to Turtlebot odometry
 
-        
-        // Subscribe to gas loaded from reservoir 
-        // in the bushland node
-        ros::Subscriber gasTankSub;
+        ros::Publisher detectedGoalPub; // Publisher goal detection
+        ros::Publisher cmdPub;  // Publisher for Turtlebot velocity 
 
-        // Subscribe to operation mode from the user interface
-        ros::Subscriber modeSub;
-
-        // Subscribe to the currently detected april tag ID from april tag detector
-        ros::Subscriber tagSub;
-
-        ros::Subscriber prioritySub;    // May not be in use
-
-        // Hestia odometry subscriber
-        ros::Subscriber odometrySub; 
-
-        // Goal detection publisher
-        ros::Publisher detectedGoalPub;
-
-        // Command prompt velocity publisher
-        ros::Publisher commandPub;
-
-
-        // 
-        void processDetectedID();
-
-        // Callback for the water tank subscriber
-        void WaterTankCallback(const std_msgs::Int32::ConstPtr& msg);
-
-        // Callback for the gas tank subscriber
-        void GasTankCallback(const std_msgs::Int32::ConstPtr& msg);
+        ros::Publisher loadResources;  // Publisher for loading onboard water and gas resources 
+        ros::Publisher deployResources;  // Publisher for deploying onboard water and gas resources 
 
         // Callback for the operation mode subscriber
         void ModeCallback(const std_msgs::String::ConstPtr& msg);
 
-        // Callback for the april tag subscriber
+        // Callback for the Apriltag subscriber
         void TagCallback(const std_msgs::Int32::ConstPtr& msg);
 
+        // Callback for the Turtlebot odometry subscriber
         void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
+
+        // Callback for the calculated required water amount from bushland
+        void requiredResoucesCallback(const std_msgs::Int32::ConstPtr& msg);
+
+        // Perform the controlled burning or fire elimination operations
+        void processDetectedID();
 
         // Navstack move base client 
         actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* moveBaseClient;
@@ -128,6 +91,8 @@ class Hestia
         // Turns the Hestia bot by the given degrees
         void turn(float degrees);
 
+        // Receives a YAML with the coordinates of all the reservoirs and bushes
+        // Returns a vector of the coordinates of interest
         std::vector<std::pair<float, float>> getPositions(const std::string& filename);
 };
 

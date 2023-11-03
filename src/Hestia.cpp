@@ -1,23 +1,14 @@
-// This is the Hestia node responsible for receiving information from 
-// the Bushland node for the operation of Device
-
 //--Includes-----------------------------------------------------------
 #include "hestia/Hestia.h"
 
-
-
-// #include <format>
-
 //--Hestia Implementation------------------------------------------
 // Constructs Hestia
-Hestia::Hestia(): originalPoseReceived(false) 
+Hestia::Hestia()
 {
     // Initialise the amount of resources required
     requiredResource = 0;
 
-    // Initialise the last detected ID
-    currentId = -1;
-
+    // Initialise the detected ID
     detectedId = -1;
 
     // Initialise the operation mode
@@ -44,7 +35,7 @@ Hestia::Hestia(): originalPoseReceived(false)
 
     // Initialise april tag detection subscriber
     tagSub = nh.subscribe("/tag_detection", 100, &Hestia::TagCallback, this);
-    commandPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+    cmdPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 
     // Decide where Hestia needs to go next
     // prioritySub = nh.subscribe("priority_list", 1, &Hestia::priorityCallback, this);
@@ -54,7 +45,7 @@ Hestia::Hestia(): originalPoseReceived(false)
     detectedGoalPub = nh.advertise<std_msgs::Int32>("/detected_goal_id", 10);
 }
 
-// Destructs Hestia
+// Destructs Hestia. Deallocates memory for the Navstack move base client
 Hestia::~Hestia()
 {
     delete moveBaseClient;
@@ -125,41 +116,58 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
     }
 }
 
-// Navigation for Hestia
+void Hestia::requiredResourcesCallback(const std_msgs::Int32::ConstPtr& msg)
+{
+
+}
+
+// Navigates Hestia and performs controlled burning or fire elimination 
+// depending on the operation mode
 void Hestia::processDetectedID() 
 {
-    // 
-    int local_id;
+    // Keep track of thread
+    int localId;
     {
+        // Apply thread lock
         std::lock_guard<std::mutex> lock(IdMutex);
-        local_id = detectedId;
-        detectedId = -1;  // Reset or whatever logic you need
+        localId = detectedId;
+        detectedId = -1;  
     }
 
-    // Now, process the local_id as you need
+    // Process the locaId
     bool isProcessingGoals = false;
 
-    if (local_id == 0 && !isProcessingGoals) 
+    // Wait till goal poses have been processed
+    if (localId == 0 && !isProcessingGoals) 
     {
+        // Get the coordinates of the reservoirs and bushes of interest
         std::vector<std::pair<float, float>> fireBushes = getPositions("src/hestia/data/map_data.yaml");
 
+        // Initialise goal pose
         std::vector<geometry_msgs::Pose> goalPose;
+
+        // Calculate the goal poses from the coordinates
         for (const auto& bush : fireBushes) 
         {
             geometry_msgs::Pose goal;
             goal.position.x = bush.first;
             goal.position.y = bush.second;
-            goal.orientation.w = 1.0;  // Assuming you want to keep the orientation constant
+
+            // Assuming orientation is kept constant
+            goal.orientation.w = 1.0;  
+
+            // Add pose to vector of goal poses
             goalPose.push_back(goal);
         }
 
-        // Now, you can iterate through the goalPose vector and send each as a goal
+        // Iterate through the goalPose vector and set each as a goal to move towards
         for (const auto& pose : goalPose) 
         {
             moveToGoal(pose);
 
             // Rotate the robot in small increments and check for detectedId
-            int rotationIncrements = 108;  // This will divide the 360 degrees into 10-degree increments
+            // Divides the 360 degrees into 10-degree increments
+            int rotationIncrements = 36;  
             for (int i = 0; i < rotationIncrements; i++) 
             {
                 if (detectedId != -1) 
@@ -168,26 +176,38 @@ void Hestia::processDetectedID()
                 }
 
                 turn(10);  // Rotate by 10 degrees
-                ros::Duration(0.1).sleep();  // Wait for half a second to give time for the callback to update detectedId
+
+                // Wait for half a second to give time for the callback to update detectedId
+                ros::Duration(0.1).sleep();  
             }
+
+            // Notification for Hestia turning
             ROS_INFO("turned loop");
 
             // If a tag is detected, stop the robot
             if (detectedId != -1) 
             {
-                turn(90);
+                turn(90);   // Rotate by 90 degrees
+
+                // Notification for detect and turn
                 ROS_INFO("New tag detected and Turned 90");
+
+                // Create goal message using the detected Apriltag ID
                 std_msgs::Int32 goalMsg;
                 goalMsg.data = detectedId;
+
+                // Publish the goal message
                 detectedGoalPub.publish(goalMsg);
                 ros::Duration(5).sleep();
             }
         }
-        isProcessingGoals = false;  // Reset the flag at the end
+
+        // Reset the goal poses processing flag at the end
+        isProcessingGoals = false;  
     }
 }
 
-// Drive Hestia to the given goal pose 
+// Helper function for processDetectedID. Drives Hestia to the given goal pose 
 void Hestia::moveToGoal(const geometry_msgs::Pose& goalPose) 
 {
     // Declare move message type
@@ -236,7 +256,7 @@ void Hestia::turn(float degrees)
     while (elapsedTime < duration) 
     {
         // Publish the turning message
-        commandPub.publish(twist);
+        cmdPub.publish(twist);
 
         // Notification for turning
         ROS_INFO("turning");
@@ -251,11 +271,13 @@ void Hestia::turn(float degrees)
     twist.angular.z = 0;
 
     // Publish the turning message
-    commandPub.publish(twist);
+    cmdPub.publish(twist);
 }
 
-// Receives the coordinates of all the reservoirs
-// Also receives all the coordinates of either the hazards or fires
+// Receives the coordinates of all the reservoirs and bushes from a YAML file
+// Saves all the coordinates of the reservoirs
+// Saves all the coordinates of either the hazards or fires
+// Returns a vector of the coordinates of interest
 std::vector<std::pair<float, float>> Hestia::getPositions(const std::string& filename) 
 {
     // Initialise the YAML file
