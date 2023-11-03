@@ -57,7 +57,7 @@ qt5_wrap_cpp(MOC_FILES include/hestia/UserInterface.h)
 
 add_executable(ui_node src/UserInterface.cpp src/user_interface_node.cpp ${MOC_FILES})
 
-add_executable(bushland_node src/Bushland.cpp src/bushland_node.cpp)
+add_executable(bushland_node src/Bushland.cpp  src/Visualizer.cpp src/bushland_node.cpp)
 
 add_executable(hestia_node src/Hestia.cpp src/hestia_node.cpp)
 
@@ -89,6 +89,3 @@ target_link_libraries(apriltag_detector_node
   ${OpenCV_LIBRARIES}
   apriltag
 )
-
-add_executable(marker src/marker.cpp)
-target_link_libraries(marker ${catkin_LIBRARIES} yaml-cpp)
