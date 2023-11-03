@@ -40,7 +40,7 @@ class AprilTagDetector
         // Apriltag publisher
         ros::Publisher tagPub;
 
-        // ROS 
+        // Frame for camera
         apriltag_family_t* tf;
 
         // ROS 
