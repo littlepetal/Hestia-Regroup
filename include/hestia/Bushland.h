@@ -8,8 +8,6 @@
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int32MultiArray.h>
-// #include "Bush.h"
-// #include "Reservoir.h"
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
@@ -19,79 +17,13 @@
 #include <string>
 #include <map>
 #include <visualization_msgs/Marker.h>
-
-//--Reservoir Interface---------------------------------------------------
-class Reservoir 
-{
-    public:
-
-        // Apriltag ID of the reservoir
-        int id;
-
-        // Coordinate of the reservoir
-        std::pair<float, float> position;
-
-        // Constructs a reservoir
-        Reservoir(int id, std::pair<float, float> pos) 
-            : id(id), position(pos) 
-        {}
-};
-
-//--Bush Interface---------------------------------------------------
-class Bush 
-{
-    public:
-
-        // Apriltag ID of the bush
-        int id;
-
-        // Coordinate of the bush
-        std::pair<float, float> position;
-
-        // Flag for whether the bush is on fire
-        bool onFire;
-
-        // The intensity of the fire at the bush
-        int fireIntensity;
-
-        // Flag for whether the bush is a fire hazard
-        bool harzard;
-
-        // Constructs a bush
-        Bush(int id, std::pair<float, float> pos, bool fire, int intensity, bool harzard) 
-            : id(id), position(pos), onFire(fire), fireIntensity(intensity), harzard(harzard) 
-        {}
-
-        // Returns the Apriltag ID of the bush
-        int getTagID() const { return id; }
-
-        // Places the bush at the given coordinate
-        void setPosition(const std::pair<float, float>& pos) { position = pos; }
-
-        // Sets the bush on fire at the given intensity
-        void setFireStatus(bool fire, int intensity) 
-        {
-            onFire = fire;
-            fireIntensity = fireIntensity + intensity;
-        }
-};
+#include "Bush.h"
+#include "Reservoir.h"
 
 //--Bushland Interface---------------------------------------------------
 class Bushland 
 {
     public:
-
-        // Adds a bush to the bushland
-        void addBush(const Bush& bush) 
-        {
-            Bushland::bush.push_back(bush);
-        }
-
-        // Adds a reservoir to the bushland
-        void addReservoir(const Reservoir& res) 
-        {
-            reservoir.push_back(res);
-        }
 
         Bushland(ros::NodeHandle& nh);  // Constructs a bushland
         
@@ -110,6 +42,7 @@ class Bushland
 
     private:
 
+        // Set enum for ID type
         enum tagId 
         {
             RESERVOIR = 0,
