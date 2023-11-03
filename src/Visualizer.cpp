@@ -1,22 +1,29 @@
-// Visualizer.cpp
-
+//--Includes-----------------------------------------------------------
 #include "hestia/Visualizer.h"
 
-// Constructor implementation
+//--Visualiser Implementation------------------------------------------
+// Constructors a visualiser
 Visualiser::Visualiser(ros::NodeHandle& nh, const std::string& markerTopic, const std::string& frameId, const std::string& yamlFile)
     : markerPub(nh.advertise<visualization_msgs::Marker>(markerTopic, 10)),
-      frameId(frameId), yamlFile(yamlFile), markerId(0) {
+      frameId(frameId), yamlFile(yamlFile), markerId(0) 
+{
 }
 
-// Run function implementation
-void Visualiser::run() {
+// Runs the visualiser
+void Visualiser::run() 
+{
+    // Create marker message
     visualization_msgs::Marker marker;
     setupMarker(marker);
 
+    // Load YAML file
     YAML::Node config = YAML::LoadFile(yamlFile);
 
-    while (ros::ok()) {
-        for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
+    // Read all configs in YAML file
+    while (ros::ok()) 
+    {
+        for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) 
+        {
             setupBushMarker(it, marker);
             markerPub.publish(marker);
         }
@@ -25,10 +32,13 @@ void Visualiser::run() {
 }
 
 // Setup the marker with default properties
-void Visualiser::setupMarker(visualization_msgs::Marker& marker) {
+void Visualiser::setupMarker(visualization_msgs::Marker& marker) 
+{
+    // Set marker frame id
     marker.header.frame_id = frameId;
     marker.header.stamp = ros::Time::now();
 
+    // Configurate marker properties
     marker.ns = "basic_shapes";
     marker.type = visualization_msgs::Marker::CUBE;
     marker.action = visualization_msgs::Marker::ADD;
@@ -40,7 +50,8 @@ void Visualiser::setupMarker(visualization_msgs::Marker& marker) {
 }
 
 // Setup individual bush markers based on the YAML configuration
-void Visualiser::setupBushMarker(YAML::const_iterator it, visualization_msgs::Marker& marker) {
+void Visualiser::setupBushMarker(YAML::const_iterator it, visualization_msgs::Marker& marker) 
+{
     std::string bushName = it->first.as<std::string>();
     YAML::Node bushData = it->second;
     bool isOnFire = bushData["onFire"].as<bool>(false); // Defaults to false if not present
