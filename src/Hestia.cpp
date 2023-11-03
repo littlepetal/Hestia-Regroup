@@ -93,11 +93,11 @@ void Hestia::requiredWaterCallback(const std_msgs::Int32::ConstPtr& msg)
     // Load the hydro blaster or flame thrower depending on the operation mode
     if (mode == 0)
     {
-        flameThrower.Load(requiredResources);
+        flameThrower->Load(requiredResource);
     }
     else
     {
-        hydroBlaster->Load(requiredResources);
+        hydroBlaster->Load(requiredResource);
     }  
 }
 
@@ -179,11 +179,11 @@ void Hestia::processDetectedID()
                 // Deploy the hydro blaster or flame thrower depending on the operation mode
                 if (mode == 0)
                 {
-                    flameThrower.Deploy(detectedId, requiredResources);
+                    flameThrower->Deploy(detectedId, requiredResource);
                 }
                 else
                 {
-                    hydroBlaster->Deploy(detectedId, requiredResources);
+                    hydroBlaster->Deploy(detectedId, requiredResource);
                 }                
 
                 // Publish the goal message
