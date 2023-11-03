@@ -24,30 +24,36 @@ void Bushland::waterMsgCallback(const std_msgs::Int32::ConstPtr &msg)
 
 void Bushland::goalCallback(const std_msgs::Int32::ConstPtr &msg)
 {
-    int goaId = msg->data;
-    
-    // id 1-4 indicates bush
-    if (goaId >= 1 && goaId <= 4) 
+    int goalId = msg->data;
+    if (mode == "Start Control Burning")
     {
-        ROS_INFO("Reached bush: %d and putout fire",goaId);
-
-        // Check if the bush with this ID already exists
-        auto it = std::find_if(bush.begin(), bush.end(), [goaId](const Bush& bush) { return bush.getTagID() == goaId; });
-        // If the bush exists and is on fire, reduce its fire intensity
-        if (it->onFire) 
+        // If reached bush need to be burned
+        
+    }
+    else if (mode == "Start Fire Eliminating")
+    {
+        // id 1-4 indicates bush
+        if (goalId >= 1 && goalId <= 4) 
         {
-            // int newFireIntensity = it->fireIntensity - waterReceived;
-            int newFireIntensity = 0;
-
-            if (newFireIntensity <= 0) 
+            ROS_INFO("Reached bush: %d and putout fire",goaId);
+    
+            // Check if the bush with this ID already exists
+            auto it = std::find_if(bush.begin(), bush.end(), [goaId](const Bush& bush) { return bush.getTagID() == goaId; });
+            
+            // If the bush exists and is on fire, reduce its fire intensity
+            if (it->onFire) 
             {
-                newFireIntensity = 0;
-                it->onFire = false;
+                int newFireIntensity = it->fireIntensity - waterReceived;
+                if (newFireIntensity <= 0) 
+                {
+                    newFireIntensity = 0;
+                    it->onFire = false;
+                }
+                // Update bush status
+                it->setFireStatus(it->onFire, newFireIntensity);
             }
-            it->setFireStatus(it->onFire, newFireIntensity);
         }
     }
-
     saveAndUpdate();
 }
 
@@ -97,10 +103,7 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
             } 
         }
     }
-    else if (mode == "Start Control Burning")
-    {
         
-    }
     else if (mode == "Start Fire Eliminating")
     {
         //At start point (reservoir position)
@@ -126,26 +129,6 @@ void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg)
             // Sort the bushes based on fire intensity, reorder the map so that hestia knows where to go first
             std::sort(bush.begin(), bush.end(), [](const Bush& a, const Bush& b) { return a.fireIntensity > b.fireIntensity; });
             reMap();
-        }
-
-        // Check if the detected ID is between 1 and 4 indicating bush
-        else if (detectedId >= 1 && detectedId <= 4) 
-        {
-            ROS_INFO("Detect bush: %d", detectedId);
-            // Check if the bush with this ID already exists
-            auto it = std::find_if(bush.begin(), bush.end(), [detectedId](const Bush& bush) { return bush.getTagID() == detectedId; });
-    
-            // If the bush exists and is on fire, reduce its fire intensity
-            if (it->onFire) 
-            {
-                int newFireIntensity = it->fireIntensity - waterReceived;
-                if (newFireIntensity <= 0) 
-                {
-                    newFireIntensity = 0;
-                    it->onFire = false;
-                }
-                it->setFireStatus(it->onFire, newFireIntensity);
-            }
         }
     }
     saveAndUpdate();
