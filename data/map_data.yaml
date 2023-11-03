@@ -1,25 +1,28 @@
 bush1:
   position:
-    - 0.2064452
-    - -1.91783
-  onFire: false
-  fireIntensity: 0
+    - 0.8990031
+    - -1.045835
+  onFire: true
+  fireIntensity: 3
   harzard: false
 bush3:
   position:
-    - -1.33023
-    - -2.384711
-  onFire: false
-  fireIntensity: 0
+    - -0.7368196
+    - -1.411852
+  onFire: true
+  fireIntensity: 2
   harzard: false
 bush2:
   position:
-    - -0.7482064
-    - -1.046609
-  onFire: false
-  fireIntensity: 0
+    - 0.04885226
+    - -0.09053949
+  onFire: true
+  fireIntensity: 1
   harzard: false
 reservoir0:
   position:
-    - -0.7483488
-    - -1.046995
+    - -0.1313922
+    - -0.03385359
+
+
+
