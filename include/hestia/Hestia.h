@@ -88,7 +88,7 @@ class Hestia
         ros::Subscriber modeSub;
 
         // Subscribe to the currently detected april tag ID from april tag detector
-        ros::Subscriber tagSub;
+        ros::Subscriber tagSub; 
 
         ros::Subscriber prioritySub;    // May not be in use
 

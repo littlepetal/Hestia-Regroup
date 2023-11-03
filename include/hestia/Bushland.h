@@ -93,26 +93,14 @@ class Bushland
             reservoir.push_back(res);
         }
 
-        // Constructs a bushland
-        Bushland(ros::NodeHandle& nh);
-
-        // Water blaster callback
-        void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);
-
-        // Navigation callback at goal
-        void goalCallback(const std_msgs::Int32::ConstPtr& msg);
-
-        // Apriltag detection call back
-        void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);
-
-        // UI fires callback 
-        void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);
-
-        // Tutlebot odometry callback to save odometry for navigation
-        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);
-
-        // UI operation mode callback
-        void modeCallback(const std_msgs::String::ConstPtr& msg);
+        Bushland(ros::NodeHandle& nh);  // Constructs a bushland
+        
+        void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);    // Water blaster callback     
+        void goalCallback(const std_msgs::Int32::ConstPtr& msg);    // Navigation callback at goal       
+        void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);    // Apriltag detection call back     
+        void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);   // UI fires callback     
+        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);  // Tutlebot odometry callback to save bush position
+        void modeCallback(const std_msgs::String::ConstPtr& msg);   // Operation mode callback
 
         // Save and update YAML file
         void saveAndUpdate();

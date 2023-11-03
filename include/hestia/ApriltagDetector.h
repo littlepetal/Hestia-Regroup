@@ -36,21 +36,13 @@ class AprilTagDetector
         void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg);
 
     private:
+    
+        ros::NodeHandle nh; // Node handle    
+        ros::Subscriber imageSub;   // Camera image subscriber
+        ros::Publisher tagPub;  // Detected Apriltag ID publisher
 
-        // Node handle
-        ros::NodeHandle nh;
-
-        // Camera image subscriber
-        ros::Subscriber imageSub;
-
-        // Detected Apriltag ID publisher
-        ros::Publisher tagPub;
-
-        // Apriltag family
-        apriltag_family_t* tf;
-
-        // ROS Apriltag package Apriltag detector
-        apriltag_detector_t* td;
+        apriltag_family_t* tf;  // Apriltag family       
+        apriltag_detector_t* td;    // ROS Apriltag package Apriltag detector
 
         // Helper function for imageCallback
         // Calculates the size of the given Apriltag
