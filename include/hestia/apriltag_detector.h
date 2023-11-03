@@ -4,7 +4,7 @@
 //--Includes-----------------------------------------------------------
 #include <ros/ros.h>
 #include <sensor_msgs/CompressedImage.h>
-#include <stdmsgs/Int32.h>
+#include <std_msgs/Int32.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <apriltag/apriltag.h>

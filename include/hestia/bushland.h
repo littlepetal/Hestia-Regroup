@@ -9,7 +9,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Int32MultiArray.h>
 // #include "Bush.h"
-// #include "Monitor.h"
+// #include "Reservoir.h"
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
@@ -80,7 +80,7 @@ class Bushland
         // Adds a bush to the bushland
         void addBush(const Bush& bush) 
         {
-            bush.push_back(bush);
+            Bushland::bush.push_back(bush);
         }
 
         // Adds a reservoir to the bushland

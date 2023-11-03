@@ -25,6 +25,7 @@ void Bushland::waterMsgCallback(const std_msgs::Int32::ConstPtr &msg)
 void Bushland::goalCallback(const std_msgs::Int32::ConstPtr &msg)
 {
     int goalId = msg->data;
+
     if (mode == "Start Control Burning")
     {
         // If reached bush need to be burned
@@ -35,10 +36,10 @@ void Bushland::goalCallback(const std_msgs::Int32::ConstPtr &msg)
         // id 1-4 indicates bush
         if (goalId >= 1 && goalId <= 4) 
         {
-            ROS_INFO("Reached bush: %d and putout fire",goaId);
+            ROS_INFO("Reached bush: %d and putout fire",goalId);
     
             // Check if the bush with this ID already exists
-            auto it = std::find_if(bush.begin(), bush.end(), [goaId](const Bush& bush) { return bush.getTagID() == goaId; });
+            auto it = std::find_if(bush.begin(), bush.end(), [goalId](const Bush& bush) { return bush.getTagID() == goalId; });
             
             // If the bush exists and is on fire, reduce its fire intensity
             if (it->onFire) 
