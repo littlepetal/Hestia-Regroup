@@ -123,55 +123,24 @@ class Bushland
     private:
 
         ros::NodeHandle &nh;
-
-        // Apriltag detector subscriber
-        ros::Subscriber tagDetectionSub;
-
-        // Flame thrower subscriber
-        ros::Subscriber fireSub;
-
-        // Trutlebot odometry subscriber
-        ros::Subscriber odometrySub;
-
-        // Hestia operation mode subscriber
-        ros::Subscriber modeSub;
-
-        // Water blaster subscriber
-        ros::Subscriber waterSub;
-
-        // Navigation to goal coordinate subscriber
-        ros::Subscriber goalSub;
-
-        // UI fires subscriber
-        ros::Publisher firePub;
-
-        // Required water for Hestia publisher
-        ros::Publisher waterPub;
         
-        // Container of all bushes in the bushland
-        std::vector<Bush> bush;
+        ros::Subscriber tagDetectionSub; // Apriltag detector subscriber  
+        ros::Subscriber fireSub;    // Flame thrower subscriber     
+        ros::Subscriber odometrySub;    // Trutlebot odometry subscriber
+        ros::Subscriber modeSub;    // Hestia operation mode subscriber
+        ros::Subscriber waterSub;   // Water blaster subscriber
+        ros::Subscriber goalSub;    // Navigation to goal coordinate subscriber       
 
-        // Name of current operation mode
-        std::string mode;
+        ros::Publisher waterPub;    // Required water for Hestia publisher  
 
-        // Container of the all reservoirs in the bushland
-        std::vector<Reservoir> reservoir;
+        std::vector<Bush> bush; // Container of all bushes in the bushland        
+        std::string mode;   // Name of current operation mode
+        std::vector<Reservoir> reservoir;   // Container of the all reservoirs in the bushland        
+        std::string filename = "src/hestia/data/map_data.yaml"; // Path of yaml file
+        std::pair<float, float> currentOdometry;    // Current odometry of Hestia
 
-        // std::string filename = "map_data.yaml";
-        // Name of yaml file
-        std::string filename = "src/hestia/data/map_data.yaml";
-
-        // Pose of the turtlebot
-        double turtleBotPose;
-
-        // Most recently detected Apriltag ID
-        int detectedId;
-
-        // Current odometry of Hestia
-        std::pair<float, float> currentOdometry;
-
-        //
-        int waterReceived;
+        int waterReceived;//
+        int detectedId; // Most recently detected Apriltag ID
 };
 
 #endif
