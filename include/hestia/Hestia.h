@@ -59,17 +59,16 @@ class Hestia
 
         ros::Subscriber modeSub; // Subscriber to the operation mode
         ros::Subscriber tagSub;  // Subscriber to the currently detected Apriltag ID
-        ros::Subscriber odometrySub;  // Subscriber to Turtlebot odometry
         ros::Subscriber requiredWaterSub;  // Subscriber to the amount of water required
 
         ros::Publisher detectedGoalPub; // Publisher goal detection
         ros::Publisher cmdPub;  // Publisher for Turtlebot velocity 
 
         // Callback for the operation mode subscriber
-        void ModeCallback(const std_msgs::String::ConstPtr& msg);
+        void modeCallback(const std_msgs::String::ConstPtr& msg);
 
         // Callback for the Apriltag subscriber
-        void TagCallback(const std_msgs::Int32::ConstPtr& msg);
+        void tagCallback(const std_msgs::Int32::ConstPtr& msg);
 
         // Callback for the Turtlebot odometry subscriber
         void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);

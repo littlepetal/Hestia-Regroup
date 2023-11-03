@@ -28,9 +28,8 @@ Hestia::Hestia()
     ROS_INFO("Finished");
 
     // Initialise subscribers
-    modeSub = nh.subscribe("/operation_mode_topic", 100, &Hestia::ModeCallback, this);
-    tagSub = nh.subscribe("/tag_detection", 100, &Hestia::TagCallback, this);
-    odometrySub = nh.subscribe("odom", 100, &Hestia::odomMsgCallback, this);
+    modeSub = nh.subscribe("/operation_mode_topic", 100, &Hestia::modeCallback, this);
+    tagSub = nh.subscribe("/tag_detection", 100, &Hestia::tagCallback, this);
     requiredWaterSub = nh.subscribe("/required_water", 100, &Hestia::requiredWaterCallback, this);
 
     // Initialise publishers
@@ -47,15 +46,8 @@ Hestia::~Hestia()
     delete moveBaseClient;
 }
 
-// Callback function to receive messages from Turtlebot odometry topic
-void Hestia::odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg)
-{
-    // Make coordinates from odometry
-    currentOdometry = std::make_pair(msg->pose.pose.position.x, msg->pose.pose.position.y);
-}
-
 // Callback function to receive the mode of operation from user interface
-void Hestia::ModeCallback(const std_msgs::String::ConstPtr& msg)
+void Hestia::modeCallback(const std_msgs::String::ConstPtr& msg)
 {
     ROS_INFO("I heard: [%s]", msg->data.c_str());
 
@@ -74,7 +66,7 @@ void Hestia::ModeCallback(const std_msgs::String::ConstPtr& msg)
 }
 
 // Callback function to receive the ID of the currently detected Apriltag
-void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
+void Hestia::tagCallback(const std_msgs::Int32::ConstPtr& msg)
 {
     detectedId = msg->data;
 
