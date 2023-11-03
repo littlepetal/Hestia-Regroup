@@ -32,6 +32,7 @@ class AprilTagDetector
         ~AprilTagDetector();
         
         // Callback function for the image subscriber. Receives images from the camera
+        // and broadcasts the ID of the detected Apriltag of interest
         void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg);
 
     private:
@@ -50,6 +51,10 @@ class AprilTagDetector
 
         // ROS Apriltag package Apriltag detector
         apriltag_detector_t* td;
+
+        // Helper function for imageCallback
+        // Calculates the size of the given Apriltag
+        computeTagSize(const apriltag_detection_t* tag)
 };
 
 #endif
