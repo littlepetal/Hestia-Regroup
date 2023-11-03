@@ -101,7 +101,7 @@ void AprilTagDetector::imageCallback(const sensor_msgs::CompressedImageConstPtr&
 }
 
 // Calculates tag size according to the pixel position of the four corners
-double ApriltagDetector::computeTagSize(const apriltag_detection_t* tag) 
+double AprilTagDetector::computeTagSize(const apriltag_detection_t* tag) 
 {
     // Initialise the coordinates of the four corners
     double x0 = tag->p[0][0], y0 = tag->p[0][1];

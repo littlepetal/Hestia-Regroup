@@ -54,7 +54,7 @@ class AprilTagDetector
 
         // Helper function for imageCallback
         // Calculates the size of the given Apriltag
-        computeTagSize(const apriltag_detection_t* tag)
+        double computeTagSize(const apriltag_detection_t* tag);
 };
 
 #endif

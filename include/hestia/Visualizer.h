@@ -11,14 +11,14 @@
 
 // The Visualizer class is responsible for managing the visualization markers in ROS
 // based on the YAML configuration file.
-class Visualizer {
+class Visualiser {
 public:
     // Constructor of the Visualizer class
     // param nh An initialized ROS NodeHandle reference
     // param marker_topic The topic name where the markers will be published
     // param frame_id The frame ID in which the markers will be placed
     // param yaml_file The path to the YAML configuration file to be parsed
-    Visualizer(ros::NodeHandle& nh, const std::string& marker_topic, const std::string& frame_id, const std::string& yaml_file);
+    Visualiser(ros::NodeHandle& nh, const std::string& markerTopic, const std::string& frameId, const std::string& yamlFile);
 
     // The run function contains the main loop, which repeatedly publishes markers
     // based on the YAML configuration file.
@@ -26,10 +26,10 @@ public:
 
 private:
     ros::NodeHandle& nh; // Reference to the ROS node handle
-    ros::Publisher marker_pub_; // ROS publisher for publishing markers
-    std::string frame_id_; // Frame ID for the markers
-    std::string yaml_file_; // Path to the YAML configuration file
-    int marker_id_; // Unique ID for each marker
+    ros::Publisher markerPub; // ROS publisher for publishing markers
+    std::string frameId; // Frame ID for the markers
+    std::string yamlFile; // Path to the YAML configuration file
+    int markerId; // Unique ID for each marker
 
     // Initializes the common properties of the markers
     void setupMarker(visualization_msgs::Marker& marker);
