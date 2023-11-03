@@ -118,9 +118,28 @@ void Hestia::ModeCallback(const std_msgs::String::ConstPtr& msg)
 void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
 {
     detectedId = msg->data;
+
+    if (detectedId == 0) 
+    {
+        std::thread(&Hestia::processDetectedID,this).detach();  // Start a new thread to process the detectedId
+    }
+}
+
+// Navigation for Hestia
+void Hestia::processDetectedID() 
+{
+    // 
+    int local_id;
+    {
+        std::lock_guard<std::mutex> lock(IdMutex);
+        local_id = detectedId;
+        detectedId = -1;  // Reset or whatever logic you need
+    }
+
+    // Now, process the local_id as you need
     bool isProcessingGoals = false;
 
-    if (detectedId == 0 && !isProcessingGoals) 
+    if (local_id == 0 && !isProcessingGoals) 
     {
         std::vector<std::pair<float, float>> fireBushes = getPositions("src/hestia/data/map_data.yaml");
 
@@ -138,8 +157,7 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
         for (const auto& pose : goalPose) 
         {
             moveToGoal(pose);
-            detectedId = -1;
-            
+
             // Rotate the robot in small increments and check for detectedId
             int rotationIncrements = 108;  // This will divide the 360 degrees into 10-degree increments
             for (int i = 0; i < rotationIncrements; i++) 
@@ -152,7 +170,6 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
                 turn(10);  // Rotate by 10 degrees
                 ros::Duration(0.1).sleep();  // Wait for half a second to give time for the callback to update detectedId
             }
-
             ROS_INFO("turned loop");
 
             // If a tag is detected, stop the robot
@@ -170,280 +187,124 @@ void Hestia::TagCallback(const std_msgs::Int32::ConstPtr& msg)
     }
 }
 
-//     if (detectedId == 0) {
-//         std::thread(&Hestia::processDetectedID,this).detach();  // Start a new thread to process the detectedId
-//     }
-// }
-// void Hestia::processDetectedID() {
-//     int local_id;
-//     {
-//         std::lock_guard<std::mutex> lock(IdMutex);
-//         local_id = detectedId;
-//         detectedId = -1;  // Reset or whatever logic you need
-//     }
-//     // Now, process the local_id as you need
-//     bool isProcessingGoals = false;
-
-//     if (local_id == 0 && !isProcessingGoals) {
-//         std::vector<std::pair<float, float>> fireBushes = getPositions("src/hestia/data/map_data.yaml");
-
-//         std::vector<geometry_msgs::Pose> goalPose;
-//         for (const auto& bush : fireBushes) {
-//             geometry_msgs::Pose goal;
-//             goal.position.x = bush.first;
-//             goal.position.y = bush.second;
-//             goal.orientation.w = 1.0;  // Assuming you want to keep the orientation constant
-//             goalPose.push_back(goal);
-//         }
-
-//         // Now, you can iterate through the goalPose vector and send each as a goal
-//         for (const auto& pose : goalPose) {
-//             moveToGoal(pose);
-
-//             // Rotate the robot in small increments and check for detectedId
-//             int rotationIncrements = 108;  // This will divide the 360 degrees into 10-degree increments
-//             for (int i = 0; i < rotationIncrements; i++) {
-//                 if (detectedId != -1) {
-//                     break;  // If a tag has been detected, break out of the loop
-//                 }
-//                 turn(10);  // Rotate by 10 degrees
-//                 ros::Duration(0.1).sleep();  // Wait for half a second to give time for the callback to update detectedId
-//             }
-//             ROS_INFO("turned loop");
-
-//             // If a tag is detected, stop the robot
-//             if (detectedId != -1) {
-//                 turn(90);
-//                 ROS_INFO("New tag detected and Turned 90");
-//                 std_msgs::Int32 goalMsg;
-//                 goalMsg.data = detectedId;
-//                 detectedGoalPub.publish(goalMsg);
-//                 ros::Duration(5).sleep();
-//             }
-//         }
-//         isProcessingGoals = false;  // Reset the flag at the end
-//     }
-// }
-
-// Drive Hestia to destination
+// Drive Hestia to the given goal pose 
 void Hestia::moveToGoal(const geometry_msgs::Pose& goalPose) 
 {
+    // Declare move message type
     move_base_msgs::MoveBaseGoal goal;
 
+    // Make the goal message
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
     goal.target_pose.pose = goalPose;
 
+    // Notification for sending the goal coordinates
     ROS_INFO("Sending goal to move_base: x = %f, y = %f", goalPose.position.x, goalPose.position.y);
+
+    // Send the goal message to the client
     moveBaseClient->sendGoal(goal);
     moveBaseClient->waitForResult();
 
+    // Determine if the goal is reached by Hestia
     if (moveBaseClient->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) 
     {
+        // Notification for succeeding to reach the goal pose
         ROS_INFO("Goal reached!");
     }
     else 
     {
+        // Notification for failing to reach the goal pose
         ROS_INFO("Failed to reach goal");
     }
 }
 
+// Turns the Hestia bot by the given degrees
 void Hestia::turn(float degrees) 
 {
-    
-    // Assuming you have a publisher to cmd_vel to control the robot
-
+    // Declare turn message type
     geometry_msgs::Twist twist;
-    twist.angular.z = (degrees > 0) ? 1.0 : -1.0;  // Set a fixed rotation speed, adjust as needed
 
-    float duration = std::abs(degrees) / 162.72;  // Your turning speed
+    // Set a fixed rotation speed
+    twist.angular.z = (degrees > 0) ? 1.0 : -1.0;  
 
-    ros::Rate rate(10);  // 10Hz
+    // Turning speed
+    float duration = std::abs(degrees) / 162.72;
+
+    // Set the publishing rate to 10Hz
+    ros::Rate rate(10);  
     float elapsedTime = 0;
     while (elapsedTime < duration) 
     {
+        // Publish the turning message
         commandPub.publish(twist);
+
+        // Notification for turning
         ROS_INFO("turning");
+
         rate.sleep();
-        elapsedTime += 0.1;  // Since we're sleeping for 0.1 seconds
+
+        // Increment elapsed time by 1/10Hz
+        elapsedTime += 0.1;  
     }
 
     // Stop the robot
     twist.angular.z = 0;
+
+    // Publish the turning message
     commandPub.publish(twist);
 }
 
+// Receives the coordinates of all the reservoirs
+// Also receives all the coordinates of either the hazards or fires
 std::vector<std::pair<float, float>> Hestia::getPositions(const std::string& filename) 
 {
+    // Initialise the YAML file
     YAML::Node config = YAML::LoadFile(filename);
     
+    // Declare the object coordinates vector
     std::vector<std::pair<float, float>> positions;
 
-    // 遍历文件中的所有灌木丛和reservoir
+    // Loop through all bushes and reservoirs presented in the YAML
     for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) 
     {
+        // Initialise the key for string processing
         std::string key = it->first.as<std::string>();
 
+        // Declare a pair of coordinates
         std::pair<float, float> position;
+
+        // Fire elimination mode
         if (mode == 1)
         {
-            // 如果该项是灌木丛，并且它是着火的，或者是reservoir，那么添加它的位置
+            // Add all the reservoirs and all the bushes that are on fire to the positions vector
             if ((key.find("bush") != std::string::npos && it->second["onFire"].as<bool>()) 
                     || key.find("reservoir") != std::string::npos) 
             {
+                // Gather object coordinates
                 position.first = it->second["position"][0].as<float>();
                 position.second = it->second["position"][1].as<float>();
+
+                // Add to positions vector
                 positions.push_back(position);
             }
         }
+        // Controlled burning mode
         else if (mode == 0)
         {
-            // 如果该项是灌木丛，并且它是危险的，或者是reservoir，那么添加它的位置
+            // Add all the reservoirs and all the bushes that are hazardous to the positions vector
             if ((key.find("bush") != std::string::npos && it->second["harzard"].as<bool>()) 
                     || key.find("reservoir") != std::string::npos) 
             {
+                // Gather object coordinates
                 position.first = it->second["position"][0].as<float>();
                 position.second = it->second["position"][1].as<float>();
+
+                // Add to positions vector
                 positions.push_back(position);
             }
         }
     }
 
+    // Return the vector of object coordinates
     return positions;
-}
-
-
-//--Device Implementation------------------------------------------
-// Constructs an empty device
-Device::Device()
-{
-    // std::cout << "Device[CTor]: Device signing on." << std::endl;
-
-    // Initialise number of available resource
-    availableResource = 0;
-}
-
-// Virtual deconstructor
-Device::~Device()
-{
-    // std::cout << "Device[DTor]: Device signing off." << std::endl;
-}
-
-// Loads the device with resource
-void Device::Load(int level)
-{
-
-}
-
-// Deploys the device using the available resources
-void Device::Deploy(int bushID, int level)
-{
-   
-}
-
-//--HydroBlaster Implementation------------------------------------------
-// Constructs a hydro blaster
-HydroBlaster::HydroBlaster()
-{
-    // std::cout << "HydroBlaster[CTor]: HydroBlster signing on." << std::endl;
-    // Initialise water blaster publisher
-    waterBlasterPub = nh.advertise<std_msgs::Int32>("/water_blasted_to_id", 100);
-}
-
-// Deconstructs a hydro blaster 
-HydroBlaster::~HydroBlaster()
-{
-    // std::cout << "HydroBlaster[DTor]: HydroBlster signing off." << std::endl;
-}
-
-// Loads the device with water
-void HydroBlaster::Load(int level)
-{
-    // Increases the number of available water by level amount
-    availableResource += level;  
-
-    // Output result
-    std::cout << availableResource << " water is now available for the hydro blaster" << std::endl;  
-}
-
-// Blasts level amount of water at the fire indicated by the bushID
-void HydroBlaster::Deploy(int bushID, int level)
-{
-    // Check that there is enough water in the bushfire manager bot
-    if (availableResource > level)
-    {
-        // Format string
-        // std::String message = std::format("Hestia deployed %d water at the fire with ID %d", level, bushID);
-
-        // Put out the fire
-        // bushland->LocateFire(bushID)->EliminateFire();  
-
-        // Format the message
-        std_msgs::Int32 message;
-        message.data = level;
-
-        // Publish the message
-        waterBlasterPub.publish(message);
-
-        // Decrement number of available water
-        availableResource -= level;
-    }
-    else
-    {
-        std::cout << "Not enough water... Fire elimination failed." << std::endl;
-    }
-}
-
-//--FlameThrower Implementation------------------------------------------
-// Constructs a flame thrower
-FlameThrower::FlameThrower()
-{
-    // std::cout << "FlameThrower[CTor]: FlameThrower signing on." << std::endl;
-
-    // Initialise flame thrower publisher
-    flameThrowerPub = nh.advertise<std_msgs::Int32>("/flame_thrown_to_id", 100);
-}
-
-// Deconstructs the flame thrower
-FlameThrower::~FlameThrower()
-{
-    // std::cout << "FlameThrower[DTor]: FlameThrower signing off." << std::endl;
-}
-
-// Loads the device with gas
-void FlameThrower::Load(int level)
-{
-    // Increases the number of available water by level amount
-    availableResource += level;  
-
-    // Output result
-    std::cout << availableResource << " gas is now available for the flame thrower" << std::endl;  
-}
-
-// Throws level amount of flames at the hazard indicated by the bushID
-void FlameThrower::Deploy(int bushID, int level)
-{
-    // Check that there is enough gas in the bushfire manager bot
-    if (availableResource > level)
-    {
-        // Format string
-        // std::String message = std::format("Hestia deployed %d flames at the hazard with ID %d", level, bushID);
-
-        // Burn the hazard
-        // bushland->LocateFire(bushID)->EliminateFire();  
-
-        // Format the message
-        std_msgs::Int32 message;
-        message.data = level;
-
-        // Publish the message
-        flameThrowerPub.publish(message);
-
-        // Decrement number of available water
-        availableResource -= level;
-    }
-    else
-    {
-        std::cout << "Not enough gas... Hazard elimination failed." << std::endl;
-    }
 }
