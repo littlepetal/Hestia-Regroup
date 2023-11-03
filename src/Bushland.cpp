@@ -2,7 +2,7 @@
 #include "hestia/Bushland.h"
 
 //--Bushland Implementation---------------------------------------------------
-// Constructor for the Bushland class
+// Constructor for the Bushland class. Initialises bushland's publishers and subscribers
 Bushland::Bushland(ros::NodeHandle& nh)
 {
     ROS_INFO("Bushland node started");
@@ -14,6 +14,7 @@ Bushland::Bushland(ros::NodeHandle& nh)
     goalSub = nh.subscribe("/detected_goal_id", 100, &Bushland::goalCallback, this);
 
     waterPub = nh.advertise<std_msgs::Int32>("/water_needed", 1);
+
     waterReceived = 0;
 }
 
@@ -68,7 +69,7 @@ void Bushland::odomMsgCallback(const nav_msgs::Odometry::ConstPtr &msg)
     currentOdometry = std::make_pair(msg->pose.pose.position.x, msg->pose.pose.position.y);
 }
 
-//  
+// Updates the YAML and calculates the total resources resquired by the hestia bot
 void Bushland::tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg) 
 {
     int detectedId = msg->data;

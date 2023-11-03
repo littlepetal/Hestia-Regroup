@@ -21,6 +21,9 @@
 #include "Reservoir.h"
 
 //--Bushland Interface---------------------------------------------------
+// Bushland is responsible for keeping track of the status of all the bushes
+// and reservoirs in the bushland. Bushland also updates the YAML file
+// that holds the status and coordinates of all the bushes and reservoirs
 class Bushland 
 {
     public:
