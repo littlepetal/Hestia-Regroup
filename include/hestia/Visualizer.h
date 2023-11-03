@@ -25,7 +25,7 @@ public:
     void run();
 
 private:
-    ros::NodeHandle& nh; // Reference to the ROS node handle
+
     ros::Publisher markerPub; // ROS publisher for publishing markers
     std::string frameId; // Frame ID for the markers
     std::string yamlFile; // Path to the YAML configuration file

@@ -5,7 +5,9 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "apriltag_detector");
 
-    AprilTagDetector detector;
+    ros::NodeHandle nh;
+
+    AprilTagDetector detector(nh);
 
     ros::spin();
     

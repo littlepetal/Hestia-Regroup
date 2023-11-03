@@ -2,7 +2,7 @@
 #include "hestia/Device.h"
 
 //--Device Implementation------------------------------------------
-// Constructs an empty device
+// Constructs an empty device. Initialises the load and deploy publishers
 Device::Device()
 {
     // Initialise number of available resource
@@ -47,7 +47,7 @@ void Device::Deploy(int bushID, int level)
 }
 
 //--HydroBlaster Implementation------------------------------------------
-// Constructs a hydro blaster
+// Constructs an empty hydro blaster
 HydroBlaster::HydroBlaster()
 {
 }
@@ -70,7 +70,7 @@ void HydroBlaster::Deploy(int bushID, int level)
 }
 
 //--FlameThrower Implementation------------------------------------------
-// Constructs a flame thrower
+// Constructs an empty flame thrower
 FlameThrower::FlameThrower()
 {
 }

@@ -5,7 +5,7 @@
 //--AprilTagDetector Implementation---------------------------------------------------
 // ApriltagDetector constructor. Initialises the ApriltagDetector node, 
 // subscriber for camera image, and publisher for Apriltag detection
-AprilTagDetector::AprilTagDetector() : nh("~") 
+AprilTagDetector::AprilTagDetector(ros::NodeHandle &nh) 
 {
     // Notification for starting the node
     ROS_INFO("Node started.");

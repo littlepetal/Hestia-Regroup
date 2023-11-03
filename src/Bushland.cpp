@@ -3,7 +3,7 @@
 
 //--Bushland Implementation---------------------------------------------------
 // Constructor for the Bushland class
-Bushland::Bushland(ros::NodeHandle& nh) : nh(nh)
+Bushland::Bushland(ros::NodeHandle& nh)
 {
     ROS_INFO("Bushland node started");
     tagDetectionSub = nh.subscribe("/tag_detection", 100, &Bushland::tagDetectionCallback, this);

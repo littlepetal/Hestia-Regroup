@@ -20,8 +20,9 @@
 #include <mutex>
 
 //--Device Interface---------------------------------------------------
-// Device is responsible for controlling the operation of the onboard 
-// bushfire management devices. 
+// Device is the base class of the onboard hydro blaster and lame thrower 
+// Devices can be loaded at the reservoir and deployed at bushes
+// Device publishes how many resources it loaded or deployed to bushland
 class Device
 {
     public:
@@ -48,6 +49,8 @@ class Device
 };
 
 //--HydroBlaster Interface---------------------------------------------------
+// HydroBlaster is responsible for loading water from the reservoir
+// and deploying water at the bushfires
 class HydroBlaster: public Device
 {
     public:
@@ -65,14 +68,12 @@ class HydroBlaster: public Device
         void Deploy(int bushID, int level);
 
     private:
-
-        // Publishes water blasted at fire of interest to monitor 
-        // in the bushland node
-        ros::Publisher waterBlasterPub;
         
 };
 
 //--FlameThrower Interface---------------------------------------------------
+// FlameThrower is responsible for loading gas from the reservoir
+// and deploying gas at the fire hazards
 class FlameThrower: public Device
 {
     public:
@@ -90,10 +91,7 @@ class FlameThrower: public Device
         void Deploy(int bushID, int level);
         
     private:
-    
-        // Publishes flame thrown at hazard of interest to monitor 
-        // in the bushland node
-        ros::Publisher flameThrowerPub;
+
 };
 
 #endif

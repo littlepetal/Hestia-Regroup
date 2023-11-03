@@ -4,7 +4,7 @@
 
 // Constructor implementation
 Visualiser::Visualiser(ros::NodeHandle& nh, const std::string& markerTopic, const std::string& frameId, const std::string& yamlFile)
-    : nh(nh), markerPub(nh.advertise<visualization_msgs::Marker>(markerTopic, 10)),
+    : markerPub(nh.advertise<visualization_msgs::Marker>(markerTopic, 10)),
       frameId(frameId), yamlFile(yamlFile), markerId(0) {
 }
 

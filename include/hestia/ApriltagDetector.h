@@ -25,7 +25,7 @@ class AprilTagDetector
         // Constructs an Apriltag detector object. Initialises the publishers 
         // and subscribers of the ApriltagDetector. Initialises the Apriltag detector
         // from the ROS Apriltag package
-        AprilTagDetector();
+        AprilTagDetector(ros::NodeHandle& nh);
 
         // Destructs the Apriltag detector object. Deallocates memory for the objects
         // created for using the ROS Apriltag package
@@ -36,8 +36,7 @@ class AprilTagDetector
         void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg);
 
     private:
-    
-        ros::NodeHandle nh; // Node handle    
+     
         ros::Subscriber imageSub;   // Camera image subscriber
         ros::Publisher tagPub;  // Detected Apriltag ID publisher
 
