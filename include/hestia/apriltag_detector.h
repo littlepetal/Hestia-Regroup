@@ -16,17 +16,22 @@
 #include <cv_bridge/cv_bridge.h>
 
 //--AprilTagDetector Interface---------------------------------------------------
+// The ApriltagDetector class is responsible for using information from 
+// the camera and the ROS Apriltag package to detect Apriltags in Hestia's vicinity
 class AprilTagDetector 
 {
     public:
 
-        // Constructs an Apriltag detector object
+        // Constructs an Apriltag detector object. Initialises the publishers 
+        // and subscribers of the ApriltagDetector. Initialises the Apriltag detector
+        // from the ROS Apriltag package
         AprilTagDetector();
 
-        // Destructs the Apriltag detector object
+        // Destructs the Apriltag detector object. Deallocates memory for the objects
+        // created for using the ROS Apriltag package
         ~AprilTagDetector();
         
-        // Callback function for the image subscriber
+        // Callback function for the image subscriber. Receives images from the camera
         void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg);
 
     private:
@@ -37,13 +42,13 @@ class AprilTagDetector
         // Camera image subscriber
         ros::Subscriber imageSub;
 
-        // Apriltag publisher
+        // Detected Apriltag ID publisher
         ros::Publisher tagPub;
 
-        // Frame for camera
+        // Apriltag family
         apriltag_family_t* tf;
 
-        // ROS 
+        // ROS Apriltag package Apriltag detector
         apriltag_detector_t* td;
 };
 
