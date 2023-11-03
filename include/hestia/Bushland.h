@@ -97,12 +97,12 @@ class Bushland
         
         void waterMsgCallback(const std_msgs::Int32::ConstPtr& msg);    // Water blaster callback     
         void goalCallback(const std_msgs::Int32::ConstPtr& msg);    // Navigation callback at goal       
-        void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);    // Apriltag detection call back     
+        void tagDetectionCallback(const std_msgs::Int32::ConstPtr& msg);    // Apriltag detection callback     
         void fireInfoCallback(const hestia::BushFire::ConstPtr& msg);   // UI fires callback     
-        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);  // Tutlebot odometry callback to save bush position
+        void odomMsgCallback(const nav_msgs::Odometry::ConstPtr& msg);  // Tutlebot odometry callback 
         void modeCallback(const std_msgs::String::ConstPtr& msg);   // Operation mode callback
 
-        // Save and update YAML file
+        // Save and update YAML map file
         void saveAndUpdate();
 
         // Sort the fire intensities in the YAML file
