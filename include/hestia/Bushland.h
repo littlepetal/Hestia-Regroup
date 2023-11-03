@@ -122,6 +122,14 @@ class Bushland
 
     private:
 
+        enum tagId {
+            RESERVOIR = 0,
+            BUSH1 = 1,
+            BUSH2 = 2,
+            BUSH3 = 3,
+            BUSH4 = 4
+        };
+        
         ros::NodeHandle &nh;
         
         ros::Subscriber tagDetectionSub; // Apriltag detector subscriber  
