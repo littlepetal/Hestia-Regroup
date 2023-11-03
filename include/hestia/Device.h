@@ -34,10 +34,10 @@ class Device
         virtual ~Device();
 
         // Loads the device
-        virtual void Load(int level);
+        virtual void load(int level);
 
         // Deploys the device
-        virtual void Deploy(int bushID, int level);
+        virtual void deploy(int bushID, int level);
 
     protected:
 
@@ -62,10 +62,10 @@ class HydroBlaster: public Device
         ~HydroBlaster();
 
         // Increases the number of available water by level amount
-        void Load(int level);
+        void load(int level);
 
         // Blasts water at the bush indicated by bushID
-        void Deploy(int bushID, int level);
+        void deploy(int bushID, int level);
 
     private:
         
@@ -85,10 +85,10 @@ class FlameThrower: public Device
         ~FlameThrower();
 
         // Increases the number of available gas by level amount
-        void Load(int level);
+        void load(int level);
 
         // Throws flames at the bush indicated by bushID
-        void Deploy(int bushID, int level);
+        void deploy(int bushID, int level);
         
     private:
 

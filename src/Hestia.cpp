@@ -1,5 +1,6 @@
 //--Includes-----------------------------------------------------------
 #include "hestia/Hestia.h"
+#include "hestia/Device.h"
 
 //--Hestia Implementation------------------------------------------
 // Constructs Hestia and its hydro blaster and flame thrower
@@ -93,11 +94,11 @@ void Hestia::requiredWaterCallback(const std_msgs::Int32::ConstPtr& msg)
     // Load the hydro blaster or flame thrower depending on the operation mode
     if (mode == 0)
     {
-        flameThrower->Load(requiredResource);
+        flameThrower->load(requiredResource);
     }
     else
     {
-        hydroBlaster->Load(requiredResource);
+        hydroBlaster->load(requiredResource);
     }  
 }
 
@@ -179,11 +180,11 @@ void Hestia::processDetectedID()
                 // Deploy the hydro blaster or flame thrower depending on the operation mode
                 if (mode == 0)
                 {
-                    flameThrower->Deploy(detectedId, requiredResource);
+                    flameThrower->deploy(detectedId, requiredResource);
                 }
                 else
                 {
-                    hydroBlaster->Deploy(detectedId, requiredResource);
+                    hydroBlaster->deploy(detectedId, requiredResource);
                 }                
 
                 // Publish the goal message

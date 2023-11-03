@@ -19,7 +19,7 @@ Device::~Device()
 }
 
 // Loads the device with resource
-void Device::Load(int level)
+void Device::load(int level)
 {
     // Increases the number of available resources by level amount
     availableResource += level;  
@@ -33,7 +33,7 @@ void Device::Load(int level)
 }
 
 // Deploys the device using the available resources
-void Device::Deploy(int bushID, int level)
+void Device::deploy(int bushID, int level)
 {
     // Decrement number of available water
     availableResource -= level;
@@ -58,15 +58,15 @@ HydroBlaster::~HydroBlaster()
 }
 
 // Loads the device with water
-void HydroBlaster::Load(int level)
+void HydroBlaster::load(int level)
 {
-    Device::Load(level);
+    Device::load(level);
 }
 
 // Blasts level amount of water at the fire indicated by the bushID
-void HydroBlaster::Deploy(int bushID, int level)
+void HydroBlaster::deploy(int bushID, int level)
 {
-    Device::Deploy(bushID, level);
+    Device::deploy(bushID, level);
 }
 
 //--FlameThrower Implementation------------------------------------------
@@ -81,13 +81,13 @@ FlameThrower::~FlameThrower()
 }
 
 // Loads the device with gas
-void FlameThrower::Load(int level)
+void FlameThrower::load(int level)
 {
-    Device::Load(level);
+    Device::load(level);
 }
 
 // Throws level amount of flames at the hazard indicated by the bushID
-void FlameThrower::Deploy(int bushID, int level)
+void FlameThrower::deploy(int bushID, int level)
 {
-    Device::Deploy(bushID, level);
+    Device::deploy(bushID, level);
 }
